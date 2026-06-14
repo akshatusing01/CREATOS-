@@ -3,8 +3,16 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
+import { Agent, setGlobalDispatcher } from "undici";
 
 dotenv.config();
+
+// Configure undici global dispatcher to prevent HeadersTimeoutError (especially for large JSON schemas)
+setGlobalDispatcher(new Agent({
+  headersTimeout: 300000, // 5 minutes
+  bodyTimeout: 300000,
+  connectTimeout: 300000,
+}));
 
 // Initialize Gemini Client Lazily/Safely
 function getGeminiClient() {

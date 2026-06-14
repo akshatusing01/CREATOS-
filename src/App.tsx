@@ -144,8 +144,26 @@ export default function App() {
         }),
       });
 
+      if (!response.ok) {
+        let errMsg = "Failed to trigger AI content transformation.";
+        try {
+          const result = await response.json();
+          errMsg = result.error || errMsg;
+        } catch {
+          try {
+            const rawText = await response.text();
+            if (rawText.includes("<!doctype") || rawText.includes("<html")) {
+              errMsg = "Server returned an HTML error page. This usually indicates a server error, a network timeout, or that the backend has crashed.";
+            } else {
+              errMsg = rawText.substring(0, 150) || errMsg;
+            }
+          } catch {}
+        }
+        throw new Error(errMsg);
+      }
+
       const result = await response.json();
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         throw new Error(result.error || "Failed to trigger AI content transformation.");
       }
 
@@ -255,8 +273,26 @@ export default function App() {
         })
       });
 
+      if (!response.ok) {
+        let errMsg = `Failed to refine ${moduleKey} module.`;
+        try {
+          const result = await response.json();
+          errMsg = result.error || errMsg;
+        } catch {
+          try {
+            const rawText = await response.text();
+            if (rawText.includes("<!doctype") || rawText.includes("<html")) {
+              errMsg = "Server returned an HTML error page. This usually indicates a server error, a network timeout, or that the backend has crashed.";
+            } else {
+              errMsg = rawText.substring(0, 150) || errMsg;
+            }
+          } catch {}
+        }
+        throw new Error(errMsg);
+      }
+
       const result = await response.json();
-      if (!response.ok || !result.success) {
+      if (!result.success) {
         throw new Error(result.error || `Failed to refine ${moduleKey} module.`);
       }
 
