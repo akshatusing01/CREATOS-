@@ -30,15 +30,15 @@ export default function LoadingIndicator() {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-          className="w-24 h-24 rounded-full border-4 border-t-indigo-500 border-r-indigo-400/30 border-b-purple-500/10 border-l-purple-500/30"
+          className="w-24 h-24 rounded-full border-4 border-t-[#cf7051] border-r-[#cf7051]/30 border-b-[#cca972]/10 border-l-[#cca972]/30"
         />
         <motion.div
           animate={{ rotate: -360 }}
           transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-          className="absolute inset-2 rounded-full border-2 border-b-teal-500 border-t-transparent border-l-transparent border-r-teal-500/20"
+          className="absolute inset-2 rounded-full border-2 border-b-[#cca972] border-t-transparent border-l-transparent border-r-[#cca972]/20"
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#cf7051] animate-spin" />
         </div>
       </div>
 
@@ -52,11 +52,11 @@ export default function LoadingIndicator() {
             transition={{ duration: 0.3 }}
             className="flex flex-col items-center gap-2"
           >
-            <div className="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
-              <CurrentIcon className="w-4 h-4 animate-pulse text-indigo-400" />
+            <div className="flex items-center gap-2 text-[#cca972] text-[10px] font-black uppercase tracking-wider">
+              <CurrentIcon className="w-4 h-4 animate-pulse text-[#cf7051]" />
               <span>CreatorOS Engine</span>
             </div>
-            <p className="text-sm font-medium text-gray-300 leading-snug">
+            <p className="text-sm font-medium text-[#e8dfd8] leading-snug">
               {MESSAGES[msgIndex].text}
             </p>
           </motion.div>
@@ -64,15 +64,15 @@ export default function LoadingIndicator() {
       </div>
 
       {/* Progress status bar */}
-      <div className="w-64 h-1.5 bg-gray-800 rounded-full overflow-hidden mt-6 border border-gray-700/50">
+      <div className="w-64 h-1.5 bg-[#0c0c0e] rounded-full overflow-hidden mt-6 border border-[#232225] shadow-inner">
         <motion.div
           initial={{ width: "5%" }}
           animate={{ width: "95%" }}
           transition={{ duration: 18, ease: "easeOut" }}
-          className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 rounded-full"
+          className="h-full bg-gradient-to-r from-[#cf7051] via-[#cca972] to-[#9ca69b] rounded-full"
         />
       </div>
-      <span className="text-[10px] text-gray-500 font-mono mt-3 uppercase tracking-widest">
+      <span className="text-[9px] text-[#9ca69b] font-mono mt-3 uppercase tracking-widest">
         Compiling packages • Do not close tabs
       </span>
     </div>

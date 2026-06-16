@@ -23,3 +23,141 @@
   background: rgba(99, 102, 241, 0.4);
 }
 
+/* High Contrast Light Mode Stylesheet */
+.theme-light {
+  background-color: #f7f5f1 !important;
+  color: #1a1613 !important;
+}
+
+.theme-light ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+.theme-light ::-webkit-scrollbar-thumb {
+  background: rgba(184, 76, 47, 0.15);
+}
+.theme-light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(184, 76, 47, 0.3);
+}
+
+/* Structural cards and panels */
+.theme-light .bg-\[\#141416\]\/95,
+.theme-light .bg-\[\#141416\],
+.theme-light .bg-white\/5 {
+  background-color: #ffffff !important;
+  border-color: #e3ded6 !important;
+  color: #1a1613 !important;
+  box-shadow: 0 10px 30px -10px rgba(26, 22, 19, 0.06), 0 1px 3px rgba(26, 22, 19, 0.02) !important;
+}
+
+/* Background floating canvas adjustments */
+.theme-light .bg-\[\#0c0c0e\] {
+  background-color: #f7f5f1 !important;
+}
+
+/* Form inputs, Select boxes & Textareas */
+.theme-light select,
+.theme-light input,
+.theme-light textarea {
+  background-color: #fcfbfa !important;
+  color: #1a1613 !important;
+  border-color: #e3ded6 !important;
+  outline: none !important;
+}
+
+.theme-light select:focus,
+.theme-light input:focus,
+.theme-light textarea:focus {
+  border-color: #b84c2f !important;
+  box-shadow: 0 0 0 2px rgba(184, 76, 47, 0.1) !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #8c8276 !important;
+}
+
+/* Options within dark select dropdowns (safeguarding system select rendering) */
+.theme-light option {
+  background-color: #ffffff !important;
+  color: #1a1613 !important;
+}
+
+/* Specific button and utility overrides */
+.theme-light .bg-\[\#202022\],
+.theme-light .bg-\[\#202022\]\/80 {
+  background-color: #ebe7e0 !important;
+  border-color: #d8d3c9 !important;
+  color: #4a423b !important;
+}
+
+.theme-light .hover\:bg-\[\#2c2c2f\]:hover,
+.theme-light .hover\:bg-\[\#28282a\]:hover {
+  background-color: #ded9cf !important;
+  color: #1a1613 !important;
+}
+
+/* Primary/Action buttons */
+.theme-light .bg-\[\#cf7051\] {
+  background-color: #b84c2f !important;
+  color: #ffffff !important;
+}
+.theme-light .hover\:bg-\[\#c06041\]:hover {
+  background-color: #9d3f25 !important;
+}
+
+/* Active tab text and indicators */
+.theme-light .text-\[\#e8dfd8\] {
+  color: #1a1613 !important;
+}
+.theme-light .text-\[\#9ca69b\] {
+  color: #726a5f !important;
+}
+.theme-light .text-\[\#cca972\] {
+  color: #9c7132 !important; /* higher contrast warm gold */
+}
+.theme-light .text-\[\#cf7051\] {
+  color: #b84c2f !important; /* higher contrast red/rose */
+}
+
+/* Floating layer effects */
+.theme-light .opacity-20,
+.theme-light .opacity-30 {
+  opacity: 0.08 !important;
+}
+
+/* In-app text color helper variables */
+.theme-light .text-white {
+  color: #1a1613 !important;
+}
+.theme-light .text-slate-100,
+.theme-light .text-slate-200,
+.theme-light .text-gray-100 {
+  color: #1a1613 !important;
+}
+.theme-light .text-slate-400,
+.theme-light .text-gray-400,
+.theme-light .text-zinc-400 {
+  color: #615a51 !important;
+}
+
+/* Retain white text specifically for labels/symbols on filled badges or buttons */
+.theme-light .bg-\[\#cf7051\] *,
+.theme-light .bg-\[\#cf7051\] .text-white,
+.theme-light .bg-emerald-600 *,
+.theme-light .bg-emerald-600 .text-white,
+.theme-light button.bg-\[\#cf7051\] *,
+.theme-light button.bg-\[\#cf7051\] {
+  color: #ffffff !important;
+}
+
+/* Fix quote card gradient to make it super elegant in light mode */
+.theme-light .bg-gradient-to-r.from-neutral-950\/60 {
+  background-image: linear-gradient(to right, #f2eee6, #e7e3da) !important;
+  border-color: #dcd7ce !important;
+}
+
+.theme-light .bg-gradient-to-r.from-\[\#141416\]\/95 {
+  background-image: linear-gradient(to right, #ffffff, #fcfbfa) !important;
+  border-color: #e3ded6 !important;
+}
+

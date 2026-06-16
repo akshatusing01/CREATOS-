@@ -4,6 +4,7 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import dotenv from "dotenv";
 import { Agent, setGlobalDispatcher } from "undici";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
@@ -13,6 +14,40 @@ setGlobalDispatcher(new Agent({
   bodyTimeout: 300000,
   connectTimeout: 300000,
 }));
+
+// Warm caching of Supabase Client dynamically
+let supabaseClientCached: any = null;
+
+function cleanEnvValue(val: string | undefined): string {
+  if (!val) return "";
+  let s = val.trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
+function getSupabaseClient() {
+  if (supabaseClientCached) return supabaseClientCached;
+  const url = cleanEnvValue(process.env.SUPABASE_URL);
+  const key = cleanEnvValue(process.env.SUPABASE_ANON_KEY);
+  if (
+    !url ||
+    !key ||
+    url === "MY_SUPABASE_URL" ||
+    key === "MY_SUPABASE_ANON_KEY" ||
+    (!url.startsWith("http://") && !url.startsWith("https://"))
+  ) {
+    return null;
+  }
+  try {
+    supabaseClientCached = createClient(url, key);
+    return supabaseClientCached;
+  } catch (err) {
+    console.warn("Supabase client creation failed:", err);
+    return null;
+  }
+}
 
 // Initialize Gemini Client Lazily/Safely
 function getGeminiClient() {
@@ -413,6 +448,163 @@ Make the new version 100% better, punchier, and fully realized.`;
     } catch (err: any) {
       console.error("Gemini Module Regeneration Error:", err);
       return res.status(500).json({ error: err.message || "An error occurred during module regeneration." });
+    }
+  });
+
+  // DB integration status endpoint
+  app.get("/api/db-status", async (req, res) => {
+    const rawUrl = cleanEnvValue(process.env.SUPABASE_URL);
+    const rawKey = cleanEnvValue(process.env.SUPABASE_ANON_KEY);
+    const client = getSupabaseClient();
+    const isConfigured = client !== null;
+    let isReachable = false;
+    let detail = "NOT_CONFIGURED";
+    let count = 0;
+
+    if (isConfigured && client) {
+      try {
+        const { data, error, status } = await client
+          .from("creatoros_projects")
+          .select("id")
+          .limit(1);
+
+        if (error) {
+          console.error("Supabase probe select error:", error);
+          if (error.code === "PGRST116" || error.message.includes("does not exist") || status === 404) {
+            isReachable = true; // Reachable, but table hasn't been created yet
+            detail = "TABLE_NOT_FOUND";
+          } else {
+            detail = `API_ERROR: ${error.message}`;
+          }
+        } else {
+          isReachable = true;
+          detail = "CONNECTED";
+          count = data ? data.length : 0;
+        }
+      } catch (err: any) {
+        console.error("Supabase connection exception:", err);
+        detail = `EXCEPTION: ${err.message || err}`;
+      }
+    }
+
+    res.json({
+      configured: isConfigured,
+      reachable: isReachable,
+      status: detail,
+      url: rawUrl,
+      setupSql: `-- CREATE THE DATABASE TABLE IN YOUR SUPABASE SQL EDITOR:
+CREATE TABLE IF NOT EXISTS creatoros_projects (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  "inputText" TEXT NOT NULL,
+  config JSONB NOT NULL,
+  "packageData" JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- OPTIONAL: Add Row Level Security (RLS) bypass or policy to public
+ALTER TABLE creatoros_projects ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public select" ON creatoros_projects FOR SELECT USING (true);
+CREATE POLICY "Allow public insert" ON creatoros_projects FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update" ON creatoros_projects FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete" ON creatoros_projects FOR DELETE USING (true);
+`
+    });
+  });
+
+  // GET all projects from Supabase (with automatic local storage fallback on the client)
+  app.get("/api/projects", async (req, res) => {
+    try {
+      const client = getSupabaseClient();
+      if (!client) {
+        return res.json({ success: true, source: "localStorage", data: [] });
+      }
+
+      const { data, error } = await client
+        .from("creatoros_projects")
+        .select("*")
+        .order("timestamp", { ascending: false });
+
+      if (error) {
+        if (error.code === "PGRST116" || error.message.includes("does not exist")) {
+          return res.status(404).json({
+            success: false,
+            error: "Table 'creatoros_projects' does not exist in Supabase.",
+            code: "TABLE_NOT_FOUND"
+          });
+        }
+        throw error;
+      }
+
+      return res.json({ success: true, source: "supabase", data });
+    } catch (err: any) {
+      console.error("Supabase GET error:", err);
+      return res.status(500).json({ success: false, error: err.message || "Failed to load projects from Supabase." });
+    }
+  });
+
+  // POST save / update a project in Supabase
+  app.post("/api/projects", async (req, res) => {
+    try {
+      const client = getSupabaseClient();
+      if (!client) {
+        return res.status(400).json({ success: false, error: "Supabase credentials are not configured on the server." });
+      }
+
+      const { id, name, timestamp, inputText, config, packageData } = req.body;
+      if (!id || !name || !inputText) {
+        return res.status(400).json({ success: false, error: "id, name, and inputText are required parameters." });
+      }
+
+      const { error } = await client
+        .from("creatoros_projects")
+        .upsert({
+          id,
+          name,
+          timestamp: timestamp || new Date().toISOString(),
+          inputText,
+          config,
+          packageData,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      return res.json({ success: true, message: "Project successfully saved to Supabase." });
+    } catch (err: any) {
+      console.error("Supabase POST error:", err);
+      return res.status(500).json({ success: false, error: err.message || "Failed to save project to Supabase." });
+    }
+  });
+
+  // DELETE a project from Supabase
+  app.delete("/api/projects/:id", async (req, res) => {
+    try {
+      const client = getSupabaseClient();
+      if (!client) {
+        return res.status(400).json({ success: false, error: "Supabase credentials are not configured on the server." });
+      }
+
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ success: false, error: "Project ID is required." });
+      }
+
+      const { error } = await client
+        .from("creatoros_projects")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        throw error;
+      }
+
+      return res.json({ success: true, message: "Project deleted from Supabase." });
+    } catch (err: any) {
+      console.error("Supabase DELETE error:", err);
+      return res.status(500).json({ success: false, error: err.message || "Failed to delete project from Supabase." });
     }
   });
 

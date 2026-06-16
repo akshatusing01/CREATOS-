@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ProfileMemory } from "../types";
 import { Save, Check, RefreshCw, Sparkles, BookOpen, UserCheck } from "lucide-react";
 import { motion } from "motion/react";
+import { soundManager } from "../utils/sound";
 
 interface ProfileConfigProps {
   onSync: (profile: ProfileMemory) => void;
@@ -20,6 +21,7 @@ const DEFAULT_PROFILE: ProfileMemory = {
 export default function ProfileConfig({ onSync }: ProfileConfigProps) {
   const [profile, setProfile] = useState<ProfileMemory>(DEFAULT_PROFILE);
   const [saved, setSaved] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState(false);
 
   useEffect(() => {
     const savedData = localStorage.getItem("creatoros_profile");
@@ -45,6 +47,7 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
   };
 
   const handleSave = () => {
+    soundManager.playSuccess();
     localStorage.setItem("creatoros_profile", JSON.stringify(profile));
     setSaved(true);
     onSync(profile);
@@ -52,41 +55,53 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
   };
 
   const handleReset = () => {
-    if (confirm("Reset layout preferences to standard defaults?")) {
+    if (!resetConfirm) {
+      soundManager.playClick();
+      setResetConfirm(true);
+      setTimeout(() => setResetConfirm(false), 4000);
+    } else {
+      soundManager.playSuccess();
       setProfile(DEFAULT_PROFILE);
       localStorage.setItem("creatoros_profile", JSON.stringify(DEFAULT_PROFILE));
       onSync(DEFAULT_PROFILE);
       setSaved(true);
+      setResetConfirm(false);
       setTimeout(() => setSaved(false), 2000);
     }
   };
 
   return (
-    <div className="bg-gray-900/60 backdrop-blur-md rounded-2xl border border-gray-800/80 p-6 shadow-xl">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-4 mb-6">
+    <div className="bg-[#141416]/95 backdrop-blur-md rounded-2xl border border-[#232225] p-6 shadow-2xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#232225] pb-4 mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <UserCheck className="w-5 h-5 text-indigo-400" />
-            <h3 className="text-base font-semibold text-gray-100">Profile Settings (localStorage)</h3>
+            <UserCheck className="w-5 h-5 text-[#cca972]" />
+            <h3 className="text-base font-semibold text-[#e8dfd8]">Profile Settings (localStorage)</h3>
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-[11px] text-[#9ca69b] mt-0.5">
             Define your unique brand metadata to permanently seed every single AI generation.
           </p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={handleReset}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-400 border border-gray-700 transition"
+            onMouseEnter={() => soundManager.playHover()}
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition cursor-pointer ${
+              resetConfirm
+                ? "bg-[#cf7051]/20 border-[#cf7051]/55 text-[#cf7051] animate-pulse"
+                : "bg-[#202022] hover:bg-[#2c2c2f] text-[#cca972] border-[#2e2c2a]"
+            }`}
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Reset
+            <RefreshCw className={`w-3.5 h-3.5 ${resetConfirm ? "animate-spin" : ""}`} />
+            {resetConfirm ? "Confirm Reset Defaults?" : "Reset"}
           </button>
           <button
             onClick={handleSave}
-            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition ${
+            onMouseEnter={() => soundManager.playHover()}
+            className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               saved
                 ? "bg-emerald-600 text-white"
-                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/10"
+                : "bg-[#cf7051] hover:bg-[#c06041] hover:brightness-110 text-white shadow-lg shadow-[#cf7051]/10"
             }`}
           >
             {saved ? (
@@ -107,11 +122,14 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Preference Selector Cards */}
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">Language</label>
+          <label className="block text-xs font-semibold text-[#9ca69b] mb-1.5">Language</label>
           <select
             value={profile.language}
-            onChange={(e) => handleChange("language", e.target.value)}
-            className="w-full bg-gray-800/80 hover:bg-gray-800 text-gray-200 text-sm rounded-xl py-2 px-3 border border-gray-700/60 focus:border-indigo-500 focus:outline-none transition"
+            onChange={(e) => {
+              soundManager.playClick();
+              handleChange("language", e.target.value);
+            }}
+            className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
             <option value="English">English</option>
             <option value="Hinglish">Hinglish</option>
@@ -119,11 +137,14 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">Niched Focus</label>
+          <label className="block text-xs font-semibold text-[#9ca69b] mb-1.5">Niched Focus</label>
           <select
             value={profile.niche}
-            onChange={(e) => handleChange("niche", e.target.value)}
-            className="w-full bg-gray-800/80 hover:bg-gray-800 text-gray-200 text-sm rounded-xl py-2 px-3 border border-gray-700/60 focus:border-indigo-500 focus:outline-none transition"
+            onChange={(e) => {
+              soundManager.playClick();
+              handleChange("niche", e.target.value);
+            }}
+            className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
             <option value="AI">AI / AI Agents</option>
             <option value="Tech">Tech / Coding</option>
@@ -136,11 +157,14 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">Default Tone</label>
+          <label className="block text-xs font-semibold text-[#9ca69b] mb-1.5">Default Tone</label>
           <select
             value={profile.tone}
-            onChange={(e) => handleChange("tone", e.target.value)}
-            className="w-full bg-gray-800/80 hover:bg-gray-800 text-gray-200 text-sm rounded-xl py-2 px-3 border border-gray-700/60 focus:border-indigo-500 focus:outline-none transition"
+            onChange={(e) => {
+              soundManager.playClick();
+              handleChange("tone", e.target.value);
+            }}
+            className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
             <option value="Professional">Professional</option>
             <option value="Casual">Casual / Direct</option>
@@ -152,11 +176,14 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">Rewrite Strength</label>
+          <label className="block text-xs font-semibold text-[#9ca69b] mb-1.5">Rewrite Strength</label>
           <select
             value={profile.rewriteStrength}
-            onChange={(e) => handleChange("rewriteStrength", e.target.value)}
-            className="w-full bg-gray-800/80 hover:bg-gray-800 text-gray-200 text-sm rounded-xl py-2 px-3 border border-gray-700/60 focus:border-indigo-500 focus:outline-none transition"
+            onChange={(e) => {
+              soundManager.playClick();
+              handleChange("rewriteStrength", e.target.value);
+            }}
+            className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
             <option value="Light rewrite">Light tweak (Preserve original structure)</option>
             <option value="Medium rewrite">Balanced rewrite (Optimized split)</option>
@@ -165,11 +192,14 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">Preferred Production Style</label>
+          <label className="block text-xs font-semibold text-[#9ca69b] mb-1.5">Preferred Production Style</label>
           <select
             value={profile.style}
-            onChange={(e) => handleChange("style", e.target.value)}
-            className="w-full bg-gray-800/80 hover:bg-gray-800 text-gray-200 text-sm rounded-xl py-2 px-3 border border-gray-700/60 focus:border-indigo-500 focus:outline-none transition"
+            onChange={(e) => {
+              soundManager.playClick();
+              handleChange("style", e.target.value);
+            }}
+            className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
             <option value="Storytelling">Classic Story Arc</option>
             <option value="Documentary">Vox-style Mini-doc</option>
@@ -181,33 +211,33 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">Hook Strategy Preference</label>
+          <label className="block text-xs font-semibold text-[#9ca69b] mb-1.5">Hook Strategy Preference</label>
           <input
             type="text"
             value={profile.hookStyle}
             onChange={(e) => handleChange("hookStyle", e.target.value)}
             placeholder="e.g. Negative outcome or contrarian statement"
-            className="w-full bg-gray-800/80 text-gray-200 text-sm rounded-xl py-2 px-3 border border-gray-700/60 focus:border-indigo-500 focus:outline-none transition"
+            className="w-full bg-[#0c0c0e]/80 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition"
           />
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-400 mb-1.5">CTA Conversion Preference</label>
+          <label className="block text-xs font-semibold text-[#9ca69b] mb-1.5">CTA Conversion Preference</label>
           <input
             type="text"
             value={profile.ctaStyle}
             onChange={(e) => handleChange("ctaStyle", e.target.value)}
             placeholder="e.g. Comment 'GROW' to trigger automated ManyChat DM link"
-            className="w-full bg-gray-800/80 text-gray-200 text-sm rounded-xl py-2 px-3 border border-gray-700/60 focus:border-indigo-500 focus:outline-none transition"
+            className="w-full bg-[#0c0c0e]/80 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition"
           />
         </div>
       </div>
       
       {/* Help box */}
-      <div className="mt-4 flex items-center gap-2 p-3 bg-indigo-950/20 rounded-xl border border-indigo-900/30">
-        <Sparkles className="w-4 h-4 text-indigo-400 flex-shrink-0" />
-        <span className="text-[11px] text-indigo-300">
-          <strong>Persistent Identity:</strong> These custom presets will be automatically merged into local context variables on your client device, giving you a custom brand experience even without high enterprise overheads.
+      <div className="mt-4 flex items-center gap-2 p-3 bg-[#cf7051]/10 rounded-xl border border-[#cf7051]/20">
+        <Sparkles className="w-4 h-4 text-[#cca972] flex-shrink-0 animate-pulse" />
+        <span className="text-[10px] text-[#9ca69b] leading-relaxed">
+          <strong className="text-[#cca972]">Persistent Identity:</strong> These custom presets will be automatically merged into local context variables on your client device, giving you a custom brand experience even without high enterprise overheads.
         </span>
       </div>
     </div>
