@@ -275,6 +275,104 @@ const scriptBreakdownItemSchema = {
   required: ["score", "present", "notes", "fix"]
 };
 
+const scoreDetailsSchema = {
+  type: Type.OBJECT,
+  properties: {
+    score: { type: Type.INTEGER },
+    label: { type: Type.STRING },
+    reason: { type: Type.STRING }
+  },
+  required: ["score", "label", "reason"]
+};
+
+const creatorIntelligenceResponseSchema = {
+  type: Type.OBJECT,
+  properties: {
+    mode: { type: Type.STRING },
+    title: { type: Type.STRING },
+    summary: { type: Type.STRING },
+    scores: {
+      type: Type.OBJECT,
+      properties: {
+        hook: scoreDetailsSchema,
+        retention: scoreDetailsSchema,
+        flow: scoreDetailsSchema,
+        story: scoreDetailsSchema,
+        emotion: scoreDetailsSchema,
+        cta: scoreDetailsSchema,
+        packaging: scoreDetailsSchema,
+        audienceMatch: scoreDetailsSchema,
+        overall: scoreDetailsSchema
+      },
+      required: ["hook", "retention", "flow", "story", "emotion", "cta", "packaging", "audienceMatch", "overall"]
+    },
+    structure: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          name: { type: Type.STRING },
+          exists: { type: Type.BOOLEAN },
+          strength: { type: Type.INTEGER },
+          impact: { type: Type.STRING },
+          weakness: { type: Type.STRING },
+          fix: { type: Type.STRING }
+        },
+        required: ["name", "exists", "strength", "impact", "weakness", "fix"]
+      }
+    },
+    strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+    weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } },
+    missingElements: { type: Type.ARRAY, items: { type: Type.STRING } },
+    recommendedFixes: { type: Type.ARRAY, items: { type: Type.STRING } },
+    improvedVersion: { type: Type.STRING },
+    shorterVersion: { type: Type.STRING },
+    punchierVersion: { type: Type.STRING },
+    creatorDNAUpdate: {
+      type: Type.OBJECT,
+      properties: {
+        niche: { type: Type.STRING },
+        audience: { type: Type.STRING },
+        strongestFormats: { type: Type.ARRAY, items: { type: Type.STRING } },
+        strongestHooks: { type: Type.ARRAY, items: { type: Type.STRING } },
+        strongestCTAs: { type: Type.ARRAY, items: { type: Type.STRING } },
+        contentLengthPreference: { type: Type.STRING },
+        recurringPatterns: { type: Type.ARRAY, items: { type: Type.STRING } },
+        biggestBottleneck: { type: Type.STRING },
+        recommendedFocus: { type: Type.STRING }
+      },
+      required: ["niche", "audience", "strongestFormats", "strongestHooks", "strongestCTAs", "contentLengthPreference", "recurringPatterns", "biggestBottleneck", "recommendedFocus"]
+    },
+    strategy: {
+      type: Type.OBJECT,
+      properties: {
+        keepDoing: { type: Type.ARRAY, items: { type: Type.STRING } },
+        stopDoing: { type: Type.ARRAY, items: { type: Type.STRING } },
+        improveFirst: { type: Type.ARRAY, items: { type: Type.STRING } },
+        testNext: { type: Type.ARRAY, items: { type: Type.STRING } },
+        biggestBottleneck: { type: Type.STRING },
+        highestLeverageFix: { type: Type.STRING }
+      },
+      required: ["keepDoing", "stopDoing", "improveFirst", "testNext", "biggestBottleneck", "highestLeverageFix"]
+    },
+    metadata: {
+      type: Type.OBJECT,
+      properties: {
+        language: { type: Type.STRING },
+        platform: { type: Type.STRING },
+        dataConfidence: { type: Type.STRING },
+        isEstimated: { type: Type.BOOLEAN }
+      },
+      required: ["language", "platform", "dataConfidence", "isEstimated"]
+    }
+  },
+  required: [
+    "mode", "title", "summary", "scores", "structure", "strengths", "weaknesses", "missingElements",
+    "recommendedFixes", "improvedVersion", "shorterVersion", "punchierVersion", "creatorDNAUpdate",
+    "strategy", "metadata"
+  ]
+};
+
 const creatorIntelligenceSchema = {
   type: Type.OBJECT,
   properties: {
@@ -483,10 +581,13 @@ async function startServer() {
 
   app.use(express.json({ limit: '15mb' }));
 
-  // API Route for Creator Intelligence Deep Account Analysis
+  // API Route for Creator Intelligence Analytical Modes (Mode-Router Architecture)
   app.post("/api/creator-intelligence/analyze", async (req, res) => {
     try {
       const {
+        mode,
+        inputData,
+        // Keep fallback parameters support in case of generic calls
         username,
         profileUrl,
         manualReels,
@@ -497,36 +598,70 @@ async function startServer() {
         profileMemory
       } = req.body;
 
+      const activeMode = mode || "script_doctor";
+      let normalizedInput = inputData;
+
+      // Map old parameters to normalizedInput if activeMode is used with legacy payload
+      if (!normalizedInput) {
+        if (activeMode === "script_doctor") {
+          normalizedInput = {
+            scriptTitle: "Untitled Analysis",
+            platform: "instagram",
+            language: "english",
+            contentGoal: "retention",
+            audience: profileMemory?.style || "creators",
+            scriptText: scriptText || "",
+            notes: postNotes || ""
+          };
+        } else {
+          normalizedInput = {
+            username: username || "Not connected",
+            profileUrl: profileUrl || "None",
+            manualReels: manualReels || [],
+            scriptText: scriptText || "",
+            captionText: captionText || "",
+            engagementMetrics: engagementMetrics || null,
+            postNotes: postNotes || "",
+            profileMemory: profileMemory || null
+          };
+        }
+      }
+
       // Initialize API client safely
       const ai = getGeminiClient();
 
-      const systemInstruction = `You are the lead Creator Intelligence Engine inside CreatorOS.
-Your goal is to deeply analyze Instagram creator account patterns, content performance, script structures, and diagnose weaknesses to generate precise improvement guidance.
+      const systemInstruction = `You are Creator Intelligence (CI), the elite creator-specific performance learning engine and content diagnostic system inside CreatorOS AI.
+Your ultimate goal is to compute CI scores, map creator-specific formulas, and generate highly modular strategist reports that help creators make content that performs better by learning from their own content patterns.
 
-Do not promise guaranteed virality.
-Do not fabricate platform metrics—if data is partial, evaluate what is present and note confidence clearly.
-If analysis is inferred, mark it so.
+Primary analytical principles:
+- Why did this piece perform well or fail? What is the strongest hook pattern, weakest structural point, and optimal adjustment plan?
+- Do NOT promise guaranteed virality or claim every script goes viral.
+- Do NOT fabricate live Instagram data unless provided in the metrics.
+- Keep the tone elite, professional, objective, high-octane, and constructive.
 
-Tone: Practical, objective, sharp, highly professional, elite strategist, encouraging but strict content director. Match the Atelier design aesthetic and values of refinement and depth.
+Every generation must follow this strict 5-Stage intelligence process:
+STAGE A — INPUT PARSING: Extract content type, platform, language, goal, available/missing data, and input format.
+STAGE B — STRUCTURAL ANALYSIS: Dissect components (Hook, Setup, Problem, Curiosity Gap, Proof, Value, Story, Transition, CTA, Closing) and evaluate existence & strength.
+STAGE C — DIAGNOSTIC ANALYSIS: Diagnose pacing bottlenecks, dropoffs, retention triggers, and engagement quality.
+STAGE D — RECOMMENDATIONS: Provide targeted fixes, rewrite alternatives, strategy blueprints, and test next.
+STAGE E — NORMALIZE: Return strictly valid JSON according to the response contract schema. Ensure scores (hook, retention, flow, story, emotion, cta, packaging, audienceMatch, overall) are 0-100 and interpret them with the proper label (weak / moderate / strong / excellent).
 
-CRITICAL RULES:
-- If no Instagram username or profile is connected/provided, focus on analyzing the manual input pieces of scripts, captions, or notes provided, and generate a customized strategic report.
-- Break down scripts into exact components (Hook, Setup, Problem, Curiosity Gap, Proof, Value, Story, Transition, CTA, Closing). Grade them 0-100 with clear actionable fixes.
-- Generate precise Creator DNA summaries.
-- Populate ALL fields in the JSON response model schema accurately. Avoid empty or generic placeholders. Use realistic ranges (e.g. scores between 30 and 95, realistic view metrics for winner/failure posts based on engagement level if provided).`;
+Provide mode-specific analysis targeting the active mode: "${activeMode}".
+1. script_doctor: Focus on structural pacing, hook, retention arc, CTA position, rewrite alternatives (improved, shorter, punchier).
+2. performance_analyzer: Focus on metrics interpretation, save-worthiness, shareability, engagement drivers, bottleneck.
+3. creator_dna_builder: Focus on niche, audience mapping, strongest formats, tone patterns, LENGTH preferences, biggest bottlenecks, recurring vectors.
+4. winner_loser_comparison: Direct side-by-side diagnostic contrasts, lessons to double down vs copy vs avoid entirely.
+5. competitor_analysis: reference vs user sample differentiation, stylistic structural tactical gap.
+6. multi_pattern_analysis: batch patterns, duplicated strengths, repeated loop failures, common CTA formats.
+7. full_content_audit: Executive health check roadmap, prioritizations, structural system overhaul.
+8. strategy_engine: content ideas list, exact hooks, CTA variations, trend context, bottleneck tests.`;
 
-      const promptMsg = `Perform a comprehensive Instagram and script-level content intelligence analysis on the following inputs:
+      const promptMsg = `Perform a comprehensive high-octane Creator Intelligence analysis of type: "${activeMode}" using these inputs:
 ---
-Instagram Username/Profile: "${username || 'Not connected'}"
-Profile URL: "${profileUrl || 'None'}"
-Manual Reels/Links: "${manualReels ? JSON.stringify(manualReels) : 'None'}"
-Script Text: "${scriptText || 'None provided'}"
-Caption/Post Text: "${captionText || 'None provided'}"
-Engagement Metrics / Context: "${engagementMetrics ? JSON.stringify(engagementMetrics) : 'None'}"
-Post Notes / Extra: "${postNotes || 'None'}"
-Global Creator Preferences: "${profileMemory ? JSON.stringify(profileMemory) : 'None'}"
+Input Dataset JSON:
+${JSON.stringify(normalizedInput || {}, null, 2)}
 ---
-Generate the formal intelligence report matching the JSON Response Schema. Offer real customized content strategies, direct Script Doctor rewrites, and growth coach action vectors. Ensure the history reportId is newly generated (e.g. "intel_" + Date.now()).`;
+Compile the report matching the target responseSchema precisely. Provide genuine, creative copy and professional diagnosis.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-3.5-flash",
@@ -535,7 +670,7 @@ Generate the formal intelligence report matching the JSON Response Schema. Offer
           systemInstruction: systemInstruction,
           temperature: 0.75,
           responseMimeType: "application/json",
-          responseSchema: creatorIntelligenceSchema
+          responseSchema: creatorIntelligenceResponseSchema
         }
       });
 

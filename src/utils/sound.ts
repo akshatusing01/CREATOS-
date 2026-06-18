@@ -233,5 +233,93 @@ export const soundManager = {
     } catch (e) {
       // Ignored
     }
+  },
+
+  // Play a sparkling starry sound
+  playSparkle() {
+    if (this.getMuteStatus()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const notes = [880, 1100, 1320, 1760]; // Sparkling arpeggio
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.05);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.02, now + idx * 0.05 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + idx * 0.05);
+        osc.stop(now + idx * 0.05 + 0.35);
+      });
+    } catch (e) {
+      // Ignored
+    }
+  },
+
+  // Play a gentle low double thump error sound
+  playError() {
+    if (this.getMuteStatus()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      // Double low-synth buzzer
+      [150, 130].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+        gain.gain.setValueAtTime(0.04, now + idx * 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.15);
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(300, now);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + idx * 0.12);
+        osc.stop(now + idx * 0.12 + 0.18);
+      });
+    } catch (e) {
+      // Ignored
+    }
+  },
+
+  // Play interactive bubble pop
+  playPop() {
+    if (this.getMuteStatus()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.06);
+
+      gain.gain.setValueAtTime(0.03, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(now + 0.07);
+    } catch (e) {
+      // Ignored
+    }
   }
 };

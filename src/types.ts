@@ -289,20 +289,78 @@ export interface IntelHistoryReportMeta {
   saved: boolean;
 }
 
+export interface IntelScoreDetails {
+  score: number;
+  label: string; // e.g. weak / moderate / strong / excellent
+  reason: string;
+}
+
+export interface IntelMultiScore {
+  hook: IntelScoreDetails;
+  retention: IntelScoreDetails;
+  flow: IntelScoreDetails;
+  story: IntelScoreDetails;
+  emotion: IntelScoreDetails;
+  cta: IntelScoreDetails;
+  packaging: IntelScoreDetails;
+  audienceMatch: IntelScoreDetails;
+  overall: IntelScoreDetails;
+}
+
+export interface IntelStructureBlock {
+  name: string; // e.g. Hook, Setup, Problem, Curiosity Gap, Proof, Value, Story, Transition, CTA, Closing
+  exists: boolean;
+  strength: number;
+  impact: string;
+  weakness: string;
+  fix: string;
+}
+
+export interface IntelStrategyResponse {
+  keepDoing: string[];
+  stopDoing: string[];
+  improveFirst: string[];
+  testNext: string[];
+  biggestBottleneck: string;
+  highestLeverageFix: string;
+}
+
+export interface IntelDNAUpdate {
+  niche: string;
+  audience: string;
+  strongestFormats: string[];
+  strongestHooks: string[];
+  strongestCTAs: string[];
+  contentLengthPreference: string;
+  recurringPatterns: string[];
+  biggestBottleneck: string;
+  recommendedFocus: string;
+}
+
+export interface IntelMetadata {
+  language: string;
+  platform: string;
+  dataConfidence: "high" | "medium" | "low" | string;
+  isEstimated: boolean;
+}
+
 export interface CreatorIntelligenceReport {
-  workspace: "creator_intelligence";
-  account: IntelAccount;
-  creatorDNA: IntelCreatorDNA;
-  performanceScores: IntelPerformanceScores;
-  winnerAnalysis: IntelWinnerItem[];
-  failureAnalysis: IntelFailureItem[];
-  scriptBreakdown: IntelScriptBreakdown;
-  growthCoach: IntelGrowthCoach;
-  contentStrategy: IntelContentStrategy;
-  scriptDoctor: IntelScriptDoctor;
-  history: IntelHistoryReportMeta;
-  confidence: {
-    overall: number;
-    notes: string;
-  };
+  id: string;
+  createdAt: string;
+  mode: string; // e.g. script_doctor, performance_analyzer, creator_dna_builder, winner_loser_comparison, competitor_analysis, multi_pattern_analysis, full_content_audit, strategy_engine
+  title: string;
+  summary: string;
+  scores: IntelMultiScore;
+  structure: IntelStructureBlock[];
+  strengths: string[];
+  weaknesses: string[];
+  missingElements: string[];
+  recommendedFixes: string[];
+  improvedVersion: string;
+  shorterVersion: string;
+  punchierVersion: string;
+  creatorDNAUpdate: IntelDNAUpdate;
+  strategy: IntelStrategyResponse;
+  metadata: IntelMetadata;
+  saved?: boolean;
 }

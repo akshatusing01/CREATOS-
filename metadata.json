@@ -1,6 +1,6 @@
 {
   "name": "CreatorOS Personal",
-  "description": "Personal-use AI content transformation engine and package generator.",
+  "description": "Premium multi-mode Creator Intelligence diagnostic lab and AI content strategy sandbox.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
