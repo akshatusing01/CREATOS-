@@ -154,3 +154,155 @@ export interface SavedProject {
   };
   packageData: ContentPackage;
 }
+
+// ==========================================
+// Creator Intelligence Data Contract Types
+// ==========================================
+
+export interface IntelAccount {
+  platform: string;
+  username: string;
+  profileUrl: string;
+  niche: string;
+  audienceType: string;
+  contentPillars: string[];
+  toneOfVoice: string;
+  visualStyle: string;
+  postingFrequency: string;
+  consistencyScore: number;
+  dataConfidence: number;
+}
+
+export interface IntelCreatorDNA {
+  summary: string;
+  bestFormat: string;
+  bestHookType: string;
+  bestCtaType: string;
+  bestLengthRange: string;
+  mainBottleneck: string;
+  biggestOpportunity: string;
+  nextFocusArea: string;
+}
+
+export interface IntelScoreItem {
+  score: number;
+  reason: string;
+  fix: string;
+}
+
+export interface IntelPerformanceScores {
+  hookStrength: IntelScoreItem;
+  retentionPotential: IntelScoreItem;
+  flowClarity: IntelScoreItem;
+  emotionalPull: IntelScoreItem;
+  ctaStrength: IntelScoreItem;
+  packagingStrength: IntelScoreItem;
+  audienceMatch: IntelScoreItem;
+  overallQuality: IntelScoreItem;
+}
+
+export interface IntelWinnerItem {
+  postId: string;
+  title: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  score: number;
+  whyItWorked: string;
+  hookType: string;
+  emotionalTrigger: string;
+  retentionDrivers: string[];
+  ctaType: string;
+  patternTags: string[];
+}
+
+export interface IntelFailureItem {
+  postId: string;
+  title: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  score: number;
+  whyItUnderperformed: string;
+  problemAreas: string[];
+  fixSuggestions: string[];
+  betterVersionDirection: string;
+}
+
+export interface IntelScriptBreakdownItem {
+  score: number;
+  present: boolean;
+  notes: string;
+  fix: string;
+}
+
+export interface IntelScriptBreakdown {
+  hook: IntelScriptBreakdownItem;
+  setup: IntelScriptBreakdownItem;
+  problem: IntelScriptBreakdownItem;
+  curiosityGap: IntelScriptBreakdownItem;
+  proof: IntelScriptBreakdownItem;
+  value: IntelScriptBreakdownItem;
+  story: IntelScriptBreakdownItem;
+  transition: IntelScriptBreakdownItem;
+  cta: IntelScriptBreakdownItem;
+  closing: IntelScriptBreakdownItem;
+}
+
+export interface IntelGrowthCoach {
+  keepDoing: string[];
+  stopDoing: string[];
+  improveFirst: string[];
+  testNext: string[];
+  bottleneck: string;
+  highestLeverageFix: string;
+  nextImprovementLayer: string;
+}
+
+export interface IntelContentStrategy {
+  nextTopics: string[];
+  anglesToTry: string[];
+  formatsToTry: string[];
+  formatsToAvoid: string[];
+  contentGaps: string[];
+  opportunities: string[];
+}
+
+export interface IntelScriptDoctor {
+  originalScript: string;
+  strengths: string[];
+  weaknesses: string[];
+  rewrite: string;
+  shortRewrite: string;
+  hookOptions: string[];
+  ctaOptions: string[];
+  notes: string;
+}
+
+export interface IntelHistoryReportMeta {
+  reportId: string;
+  createdAt: string;
+  saved: boolean;
+}
+
+export interface CreatorIntelligenceReport {
+  workspace: "creator_intelligence";
+  account: IntelAccount;
+  creatorDNA: IntelCreatorDNA;
+  performanceScores: IntelPerformanceScores;
+  winnerAnalysis: IntelWinnerItem[];
+  failureAnalysis: IntelFailureItem[];
+  scriptBreakdown: IntelScriptBreakdown;
+  growthCoach: IntelGrowthCoach;
+  contentStrategy: IntelContentStrategy;
+  scriptDoctor: IntelScriptDoctor;
+  history: IntelHistoryReportMeta;
+  confidence: {
+    overall: number;
+    notes: string;
+  };
+}

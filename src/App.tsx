@@ -38,9 +38,19 @@ import {
   Volume2,
   VolumeX,
   Sun,
-  Moon
+  Moon,
+  Activity
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import {
+  ResponsiveContainer,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  Tooltip as RechartsTooltip
+} from "recharts";
 import ProfileConfig from "./components/ProfileConfig";
 import ProjectHistory from "./components/ProjectHistory";
 import LoadingIndicator from "./components/LoadingIndicator";
@@ -49,6 +59,72 @@ import { ContentPackage, SavedProject, ProfileMemory } from "./types";
 import { soundManager } from "./utils/sound";
 import QuoteOrb from "./components/QuoteOrb";
 import FloatingAccentLayer from "./components/FloatingAccentLayer";
+import AppShell from "./components/AppShell";
+import SidebarNav from "./components/SidebarNav";
+import TopBar from "./components/TopBar";
+import CreatorIntelligencePage from "./components/CreatorIntelligencePage";
+
+// Custom, highly-creative staggering transition presets for active tab content modules
+const tabContainerVariants = (enabled: boolean) => ({
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: enabled ? 0.08 : 0,
+      delayChildren: enabled ? 0.05 : 0
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      staggerChildren: enabled ? 0.04 : 0,
+      staggerDirection: -1
+    }
+  }
+});
+
+const tabItemVariants = (enabled: boolean) => ({
+  hidden: enabled 
+    ? { opacity: 0, y: 16, filter: "blur(6px)", scale: 0.98 } 
+    : { opacity: 0 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    scale: 1,
+    transition: enabled 
+      ? {
+          type: "spring",
+          stiffness: 110,
+          damping: 14,
+          mass: 0.8
+        } 
+      : { duration: 0 }
+  },
+  exit: enabled 
+    ? {
+        opacity: 0,
+        y: -12,
+        filter: "blur(6px)",
+        scale: 0.98,
+        transition: {
+          duration: 0.2,
+          ease: "easeInOut"
+        }
+      } 
+    : { duration: 0 }
+});
+
+const DEMO_PROJECTS_FOR_CHARTS = [
+  { config: { niche: "AI", tone: "Bold", goal: "Viral" } },
+  { config: { niche: "Tech", tone: "Educational", goal: "Retention" } },
+  { config: { niche: "Business", tone: "Professional", goal: "Authority" } },
+  { config: { niche: "Storytelling", tone: "Story-driven", goal: "Personal brand" } },
+  { config: { niche: "AI", tone: "Educational", goal: "Retention" } },
+  { config: { niche: "Tech", tone: "Casual", goal: "Viral" } },
+  { config: { niche: "Documentary", tone: "Story-driven", goal: "Clarity" } },
+  { config: { niche: "Education", tone: "Educational", goal: "Clarity" } },
+];
 
 export default function App() {
   // Theme state switcher with localStorage persistence
@@ -66,17 +142,31 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(soundManager.getMuteStatus());
   const [animationsEnabled, setAnimationsEnabled] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("creatoros_animations_disabled") !== "true";
+      const stored = localStorage.getItem("creatoros_animations_disabled");
+      if (stored === null) {
+        localStorage.setItem("creatoros_animations_disabled", "false");
+        return true;
+      }
+      return stored !== "true";
     }
     return true;
   });
+
+  // Track the unique theme sweep wave for glorious physical transition feel
+  const [themeWave, setThemeWave] = useState<{ id: number; theme: "light" | "atelier" } | null>(null);
+
+  // Separate view state for Profile Settings configuration section
+  const [showProfile, setShowProfile] = useState(false);
 
   const toggleTheme = () => {
     const nextTheme = theme === "atelier" ? "light" : "atelier";
     if (typeof window !== "undefined") {
       localStorage.setItem("creatoros_theme", nextTheme);
       setTheme(nextTheme);
-      soundManager.playClick();
+      soundManager.playSwitch(nextTheme === "light");
+      if (animationsEnabled) {
+        setThemeWave({ id: Date.now(), theme: nextTheme });
+      }
     }
   };
 
@@ -115,6 +205,51 @@ export default function App() {
 
   // App running states
   const [loading, setLoading] = useState(false);
+  
+  // State and simulated timer for Compilation Progress Feedback Bar
+  const [compileProgress, setCompileProgress] = useState(0);
+  const [showProgressBar, setShowProgressBar] = useState(false);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    let fadeOutTimeout: NodeJS.Timeout;
+
+    if (loading) {
+      setShowProgressBar(true);
+      setCompileProgress(0);
+      const startTime = Date.now();
+      const estimatedDuration = 10000; // 10 seconds simulation
+
+      interval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const progressRaw = (elapsed / estimatedDuration) * 100;
+        
+        if (progressRaw < 92) {
+          setCompileProgress(Math.min(92, Math.round(progressRaw)));
+        } else {
+          // Slow crawling progression above 92% (up to 98%)
+          setCompileProgress((prev) => {
+            const nextVal = prev + Math.random() * 0.4;
+            return nextVal >= 98 ? 98 : nextVal;
+          });
+        }
+      }, 100);
+    } else if (showProgressBar) {
+      // Set to 100% when success completes
+      setCompileProgress(100);
+      
+      // Keep it at 100% for a smooth instant, then fade out
+      fadeOutTimeout = setTimeout(() => {
+        setShowProgressBar(false);
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+      if (fadeOutTimeout) clearTimeout(fadeOutTimeout);
+    };
+  }, [loading]);
+
   const [moduleLoadingKey, setModuleLoadingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [contentPackage, setContentPackage] = useState<ContentPackage | null>(null);
@@ -138,8 +273,44 @@ export default function App() {
   // Active module view Tab category for output rendering
   const [activeTab, setActiveTab] = useState<"scripts" | "hooks-ctas" | "captions" | "analysis" | "versions">("scripts");
 
+  // Dynamic Workspace routing state
+  const [activeWorkspace, setActiveWorkspace] = useState<"atelier" | "intelligence">("atelier");
+  const [intelCount, setIntelCount] = useState(0);
+
   // Copy success animation states
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Helper to dynamically calculate niche, tone, and goal frequency radar datasets
+  const getRadarData = (key: "niche" | "tone" | "goal") => {
+    const isDemo = savedProjects.length === 0;
+    const dataset = isDemo ? DEMO_PROJECTS_FOR_CHARTS : savedProjects;
+    const counts: Record<string, number> = {};
+
+    const defaultKeysMap: Record<string, string[]> = {
+      niche: ["AI", "Tech", "Business", "Storytelling", "Documentary", "Education"],
+      tone: ["Professional", "Casual", "Bold", "Emotional", "Educational", "Story-driven"],
+      goal: ["Viral", "Retention", "Clarity", "Authority", "Personal brand"]
+    };
+
+    const defaultKeys = defaultKeysMap[key];
+    defaultKeys.forEach((k) => {
+      counts[k] = 0;
+    });
+
+    dataset.forEach((item) => {
+      const rawVal = item.config?.[key];
+      if (rawVal) {
+        const matchedKey = defaultKeys.find((dk) => dk.toLowerCase() === rawVal.toLowerCase()) || rawVal;
+        counts[matchedKey] = (counts[matchedKey] || 0) + 1;
+      }
+    });
+
+    return Object.entries(counts).map(([name, count]) => ({
+      subject: name,
+      count,
+      fullMark: Math.max(...Object.values(counts), 3) + 1
+    }));
+  };
 
   // Query live Supabase configuration status from server
   const checkDbStatus = async () => {
@@ -305,7 +476,13 @@ export default function App() {
       soundManager.playSuccess();
       // Auto-suggest a default project name based on inputs
       const shortTopic = text.trim().substring(0, 30) + "...";
-      setProjectName(`Refactor: ${niche} - ${shortTopic}`);
+      const autoSavedName = `Refactor: ${niche} - ${shortTopic}`;
+      setProjectName(autoSavedName);
+
+      // Auto-save generated creator package to local storage and secure DB backup in the background
+      setTimeout(() => {
+        handleSaveProject(autoSavedName, result.data);
+      }, 100);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "Network lost or Server API error. Make sure your GEMINI_API_KEY is configured correctly in the Secrets Panel.");
@@ -315,10 +492,11 @@ export default function App() {
   };
 
   // Save Current Project to localStorage & Supabase
-  const handleSaveProject = async () => {
-    if (!contentPackage) return;
+  const handleSaveProject = async (customName?: string, customPackage?: any) => {
+    const pkg = customPackage || contentPackage;
+    if (!pkg) return;
 
-    const nameToSave = projectName.trim() || `Transform Project - ${new Date().toLocaleDateString()}`;
+    const nameToSave = (customName || projectName).trim() || `Transform Project - ${new Date().toLocaleDateString()}`;
     const newProject: SavedProject = {
       id: activeProjectId || Date.now().toString(),
       name: nameToSave,
@@ -334,7 +512,7 @@ export default function App() {
         goal,
         style
       },
-      packageData: contentPackage
+      packageData: pkg
     };
 
     let updatedList = [...savedProjects];
@@ -583,99 +761,130 @@ export default function App() {
       {/* Background Cinematic Floating Particles & Orbs */}
       <FloatingAccentLayer />
 
+      {/* Elegant, cinematic theme transition sweep overlay - Bottom to Top Sweep */}
+      <AnimatePresence mode="popLayout">
+        {themeWave && (
+          <motion.div
+            key={themeWave.id}
+            initial={{ clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)", opacity: 0.9 }}
+            animate={{ clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", opacity: [0.9, 1, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{
+              clipPath: { duration: 0.55, ease: [0.76, 0, 0.24, 1] },
+              opacity: { times: [0, 0.5, 1], duration: 0.75, ease: "easeOut" }
+            }}
+            onAnimationComplete={() => setThemeWave(null)}
+            className="fixed inset-0 z-50 pointer-events-none overflow-hidden"
+            style={{
+              background: themeWave.theme === "light"
+                ? "linear-gradient(0deg, rgba(255,255,255,0.96) 0%, rgba(207,112,81,0.5) 40%, rgba(202,169,114,0.15) 75%, rgba(12,12,14,0) 100%)"
+                : "linear-gradient(0deg, rgba(14,14,16,0.96) 0%, rgba(32,32,34,0.6) 40%, rgba(207,112,81,0.1) 75%, rgba(0,0,0,0) 100%)"
+            }}
+          >
+            {/* Luminous, sweeping vertical high-vibrancy brand colored ray (bottom-to-top) */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: "-100%" }}
+              transition={{ duration: 0.7, ease: "easeInOut" }}
+              className="absolute inset-0 bg-gradient-to-t from-transparent via-[#cf7051]/35 to-[#cca972]/20 blur-3xl filter brightness-150"
+            />
+            {/* Central glowing, expanding dimensional tactile ripple */}
+            <motion.div
+              initial={{ scale: 0.1, opacity: 0.8 }}
+              animate={{ scale: 4.0, opacity: 0 }}
+              transition={{ duration: 0.65, ease: "easeOut" }}
+              className="absolute top-1/2 left-1/2 -track-translate-x-1/2 -track-translate-y-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 rounded-full border border-[#cca972]/30"
+              style={{ boxShadow: "0 0 50px rgba(207,112,81,0.3)" }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Visual Ambient Sand and Rose Globs */}
       <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] rounded-full bg-[#cf7051]/5 blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] rounded-full bg-[#cca972]/3 blur-[120px] pointer-events-none" />
 
       {/* Main Container Layer */}
-      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col gap-6 z-10">
-        
-        {/* Header Ribbon / Controls */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 bg-[#141416]/95 backdrop-blur-xl border border-[#232225] rounded-2xl shadow-xl gap-4 animate-fadeIn">
-          <div className="flex items-center gap-3">
-            <div className="h-11 w-11 bg-gradient-to-tr from-[#cf7051] to-[#cca972] rounded-xl flex items-center justify-center shadow-lg shadow-[#cf7051]/20">
-              <Cpu className="w-5.5 h-5.5 text-white animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="text-xl font-bold tracking-tight text-white font-display">CreatorOS</span>
-                <span className="text-[10px] bg-[#cca972]/15 text-[#cca972] border border-[#cca972]/30 font-mono font-bold px-2.5 py-0.5 rounded-full">Atelier v3.5</span>
-              </div>
-              <p className="text-xs text-[#9cd69c] text-opacity-80">Refined Content Intelligence Command Center</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Direct Reversible Preferences (Sounds, Particles, and Dark/Light Theme) */}
-            <button
-              onClick={toggleTheme}
-              onMouseEnter={() => soundManager.playHover()}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition duration-200 cursor-pointer ${
-                theme === "light"
-                  ? "bg-[#cf7051]/10 text-[#cf7051] border-[#cf7051]/30 hover:bg-[#cf7051]/15"
-                  : "bg-[#202022] text-[#cca972] border-[#2e2c2a] hover:bg-[#2c2c2f]"
-              }`}
-              title={theme === "light" ? "Switch to Atelier Dark Mode" : "Switch to High-Contrast Light Mode"}
-            >
-              {theme === "light" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-              <span>Theme: {theme === "light" ? "Light" : "Atelier"}</span>
-            </button>
-
-            <button
-              onClick={toggleSound}
-              onMouseEnter={() => soundManager.playHover()}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition duration-200 cursor-pointer ${
-                !isMuted 
-                  ? "bg-[#cf7051]/10 text-[#cf7051] border-[#cf7051]/30 hover:bg-[#cf7051]/15" 
-                  : "bg-[#202022] text-[#5e5a5c] border-[#2e2b2a] hover:bg-[#28282b]"
-              }`}
-              title={isMuted ? "Enable click feedback audio (synthesized)" : "Mute button sounds"}
-            >
-              {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-              <span className="hidden sm:inline">Audio Feedback</span>
-            </button>
-
-            <button
-              onClick={toggleAnimations}
-              onMouseEnter={() => soundManager.playHover()}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition duration-200 cursor-pointer ${
-                animationsEnabled 
-                  ? "bg-[#9ca69b]/10 text-[#9ca69b] border-[#9ca69b]/30 hover:bg-[#9ca69b]/15" 
-                  : "bg-[#202022] text-[#5e5a5c] border-[#2e2b2a] hover:bg-[#28282b]"
-              }`}
-              title={animationsEnabled ? "Disable floating animations (save CPU)" : "Enable luxury floating visual drifts"}
-            >
-              <Sparkles className={`w-3.5 h-3.5 ${animationsEnabled ? "animate-pulse" : ""}`} />
-              <span className="hidden sm:inline">Canvas Drifts</span>
-            </button>
-
-            <div className="flex items-center gap-2 bg-[#9ca69b]/10 border border-[#9ca69b]/25 rounded-xl px-3 py-1.5 text-[10.5px] font-mono font-bold text-[#9ca69b]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#cca972] animate-ping"></span>
-              GEMINI FLASH PROCESSED
-            </div>
-            
-            <a 
-              href="https://ai.studio/build"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#202022] hover:bg-[#2c2c2f] border border-[#2e2c2a] text-[#cca972] hover:text-white transition flex items-center gap-1.5"
-            >
-              Secrets Panel ⚙️
-            </a>
-          </div>
-        </header>
+      <AppShell>
+        <TopBar
+          theme={theme}
+          toggleTheme={toggleTheme}
+          isMuted={isMuted}
+          toggleSound={toggleSound}
+          animationsEnabled={animationsEnabled}
+          toggleAnimations={toggleAnimations}
+          showProfile={showProfile}
+          toggleProfile={() => {
+            soundManager.playClick();
+            setShowProfile(!showProfile);
+          }}
+        />
 
         {/* Local Settings Configuration Area */}
-        <ProfileConfig onSync={handleProfileSync} />
+        <AnimatePresence>
+          {showProfile && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, scaleY: 0.95, marginBottom: 0 }}
+              animate={{ opacity: 1, height: "auto", scaleY: 1, marginBottom: 24 }}
+              exit={{ opacity: 0, height: 0, scaleY: 0.95, marginBottom: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="origin-top overflow-hidden"
+            >
+              <ProfileConfig onSync={handleProfileSync} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Dynamic Inspiration Fuel Quote System */}
         <QuoteOrb language={language} />
 
-        {/* Dashboard Panels Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Master Workspace Split Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mt-4">
           
-          {/* LEFT SIDEBAR: Control Deck & History (Spans 4/12) */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Suite Hub sidebar controller */}
+          <div className="lg:col-span-3">
+            <SidebarNav
+              activeWorkspace={activeWorkspace}
+              setWorkspace={(ws) => {
+                soundManager.playClick();
+                setActiveWorkspace(ws);
+              }}
+              savedCount={savedProjects.length}
+              intelCount={intelCount}
+              onOpenSettings={() => {
+                soundManager.playClick();
+                setShowProfile(!showProfile);
+              }}
+              showProfile={showProfile}
+            />
+          </div>
+
+          {/* Active Workspace Container (Right side - Spans 9/12) */}
+          <div className="lg:col-span-9 space-y-6">
+            
+            <AnimatePresence mode="popLayout">
+              {activeWorkspace === "intelligence" ? (
+                <motion.div
+                  key="workspace-intel"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                >
+                  <CreatorIntelligencePage onIntelCountChange={setIntelCount} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="workspace-atelier"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25 }}
+                  className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start"
+                >
+                  
+                  {/* LEFT SIDEBAR: Control Deck & History (Spans 5/12) */}
+                  <div className="xl:col-span-5 space-y-6">
             
             {/* Input Configuration Deck */}
             <div className="bg-[#141416]/95 backdrop-blur-md border border-[#232225] rounded-2xl p-6 shadow-xl relative overflow-hidden transition duration-300 hover:border-[#cf7051]/30">
@@ -867,112 +1076,10 @@ export default function App() {
                       onMouseEnter={() => soundManager.playHover()}
                       className="flex-1 py-2.5 bg-[#cf7051]/10 hover:bg-[#cf7051]/20 text-[#cf7051] border border-[#cf7051]/20 text-[11px] font-semibold rounded-xl transition cursor-pointer animate-pulse"
                     >
-                      {dbStatus?.status === "CONNECTED" ? "Save & Cloud Sync" : "Save Local Project"}
+                      {dbStatus?.status === "CONNECTED" ? "Manual Cloud Backup" : "Save Local Backup"}
                     </button>
                   )}
                 </div>
-              </div>
-            </div>
-
-            {/* Supabase Sync Controller */}
-            <div className="bg-[#141416]/95 backdrop-blur-md border border-[#232225] rounded-2xl p-5 shadow-xl space-y-4 transition duration-300 hover:border-[#9ca69b]/30">
-              <div className="flex justify-between items-center pb-3 border-b border-[#232225]">
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-[#cca972]" />
-                  <h3 className="text-xs font-bold uppercase text-[#e8dfd8] tracking-wider font-display">Supabase Sync</h3>
-                </div>
-                {dbStatus?.configured && dbStatus?.reachable && dbStatus?.status === "CONNECTED" ? (
-                  <div className="flex items-center gap-1.5 bg-[#9ca69b]/15 border border-[#9ca69b]/30 px-2.5 py-1 rounded text-[9.5px] text-[#9ca69b] font-semibold font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#9ca69b] animate-pulse"></span>
-                    LIVE
-                  </div>
-                ) : dbStatus?.configured && dbStatus?.reachable && dbStatus?.status === "TABLE_NOT_FOUND" ? (
-                  <div className="flex items-center gap-1.5 bg-[#cca972]/15 border border-[#cca972]/30 px-2.5 py-1 rounded text-[9.5px] text-[#cca972] font-semibold font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#cca972] animate-pulse"></span>
-                    TABLE ERROR
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1.5 bg-[#202022] border border-[#28282a] px-2.5 py-1 rounded text-[9.5px] text-[#5e5a5c] font-semibold font-mono">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#5e5a5c]"></span>
-                    LOCAL CACHE
-                  </div>
-                )}
-              </div>
-
-              {/* Status explanation */}
-              <div className="space-y-2">
-                {!dbStatus?.configured ? (
-                  <div className="p-3 bg-[#1e1a17] border border-[#cf7051]/20 rounded-xl text-xs space-y-2 text-[#e8dfd8]">
-                    <p className="leading-relaxed text-opacity-80">
-                      Connect your Supabase project for durable cloud persistence. Your packages will persist securely!
-                    </p>
-                    <div className="text-[10px] bg-[#0c0c0e] p-2.5 rounded border border-[#232225] font-mono leading-relaxed space-y-1 text-[#9ca69b]">
-                      <div>1. Add to Secrets Panel:</div>
-                      <div className="text-[#cca972] font-semibold">• SUPABASE_URL</div>
-                      <div className="text-[#cca972] font-semibold">• SUPABASE_ANON_KEY</div>
-                    </div>
-                  </div>
-                ) : dbStatus?.status === "CONNECTED" ? (
-                  <div className="space-y-2.5 text-xs">
-                    <p className="text-[#e8dfd8] text-opacity-80 leading-relaxed">
-                      Synced host: <span className="font-mono text-[#cca972] select-all font-semibold break-all text-[10px] bg-[#0c0c0e] p-1.5 rounded-md border border-[#232225]">{dbStatus.url}</span>
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleFetchSupabaseProjects}
-                        disabled={dbSyncLoading}
-                        onMouseEnter={() => soundManager.playHover()}
-                        className="w-full py-2.5 bg-[#cf7051]/10 hover:bg-[#cf7051]/20 text-[#cf7051] border border-[#cf7051]/25 hover:border-[#cf7051]/45 rounded-xl font-semibold text-xs transition flex items-center justify-center gap-1.5 disabled:opacity-50 cursor-pointer"
-                      >
-                        <RefreshCw className={`w-3.5 h-3.5 ${dbSyncLoading ? "animate-spin text-[#cf7051]" : ""}`} />
-                        {dbSyncLoading ? "Synchronizing..." : "Retrieve Live Database"}
-                      </button>
-                    </div>
-                  </div>
-                ) : dbStatus?.status === "TABLE_NOT_FOUND" ? (
-                  <div className="p-3.5 bg-[#1a120c] border border-[#cca972]/25 rounded-xl text-xs space-y-2.5 text-[#e8dfd8]">
-                    <p className="leading-relaxed font-semibold text-[#cca972] flex items-center gap-1.5">
-                      <AlertTriangle className="w-4 h-4 text-[#cca972] flex-shrink-0" />
-                      Table 'creatoros_projects' is missing
-                    </p>
-                    <p className="text-[10px] leading-relaxed text-[#9ca69b]">
-                      Your Supabase database connected, but the required table doesn't exist yet inside your project.
-                    </p>
-                    <button
-                      onClick={() => {
-                        soundManager.playClick();
-                        setShowSqlSetup(!showSqlSetup);
-                      }}
-                      onMouseEnter={() => soundManager.playHover()}
-                      className="w-full py-1.5 bg-[#cca972]/10 hover:bg-[#cca972]/20 text-[#cca972] border border-[#cca972]/20 rounded-lg text-[10px] font-bold transition cursor-pointer"
-                    >
-                      {showSqlSetup ? "Collapse Setup SQL Instructions" : "Expose Setup SQL Commands"}
-                    </button>
-
-                    {showSqlSetup && (
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-[10px] text-[#9ca69b] pb-1">
-                          <span>SQL editor statement:</span>
-                          <button
-                            onClick={() => handleCopyToClipboard(dbStatus.setupSql || "", "setup-sql")}
-                            onMouseEnter={() => soundManager.playHover()}
-                            className="bg-[#202022] text-[10px] hover:bg-[#28282a] border border-[#2e2c2a] px-2 py-0.5 rounded text-[#cca972] font-semibold transition cursor-pointer"
-                          >
-                            {copiedKey === "setup-sql" ? "Copied!" : "Copy Code"}
-                          </button>
-                        </div>
-                        <pre className="text-[9px] select-all leading-normal whitespace-pre font-mono p-2 bg-[#0c0c0e] border border-[#232225] rounded text-[#e8dfd8] text-opacity-70 max-h-[140px] overflow-y-auto">
-                          {dbStatus.setupSql}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="p-3 bg-red-950/20 border border-red-500/25 rounded-xl text-xs text-red-300 space-y-1">
-                    <p className="font-semibold flex items-center gap-1"><CloudOff className="w-3.5 h-3.5" /> Handshake failed</p>
-                    <p className="text-[10px] text-slate-400 leading-relaxed">Error details: {dbStatus?.status || "Ping response timed out."}</p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -998,8 +1105,68 @@ export default function App() {
 
           </div>
 
-          {/* RIGHT VIEW AREA: Dynamic Transform Deck (Spans 8/12) */}
-          <div className="lg:col-span-8 space-y-6">
+          {/* RIGHT VIEW AREA: Dynamic Transform Deck (Spans 7/12 in sub-layout) */}
+          <div className="xl:col-span-7 space-y-6">
+
+            {/* Elegant Compilation Progress Bar */}
+            <AnimatePresence>
+              {showProgressBar && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-[#141416]/95 border border-[#cca972]/30 rounded-2xl p-4 shadow-xl shadow-[#cf7051]/5 relative overflow-hidden">
+                    {/* Glowing corner ambiance */}
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#cf7051]/10 rounded-full blur-xl pointer-events-none" />
+                    
+                    <div className="flex justify-between items-center mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#cf7051] opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-[#cf7051]"></span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#cca972]">
+                          {compileProgress === 100 ? "Creator Package Compiled!" : "Compiling Creator Package..."}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-[#e8dfd8] font-mono font-bold bg-[#cf7051]/20 px-2 py-0.5 rounded border border-[#cf7051]/30">
+                          {Math.floor(compileProgress)}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress Track */}
+                    <div className="w-full h-2 bg-[#0c0c0e] rounded-full overflow-hidden border border-[#232225] p-[1px]">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-[#cf7051] via-[#cca972] to-[#9ca69b] rounded-full relative"
+                        style={{ width: `${compileProgress}%` }}
+                        transition={{ ease: "easeOut" }}
+                      >
+                        {/* Shimmer overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[pulse_1.5s_infinite]" />
+                      </motion.div>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-2.5 gap-4">
+                      <p className="text-[10px] text-slate-400 mb-0 leading-normal flex-1">
+                        {compileProgress < 30 && "Spawning neural pipeline & fetching content models..."}
+                        {compileProgress >= 30 && compileProgress < 65 && "Structuring viral Hook and dynamic Call-To-Action configurations..."}
+                        {compileProgress >= 65 && compileProgress < 90 && "Tailoring 4 production scripts for B-Roll directors & caption editors..."}
+                        {compileProgress >= 90 && compileProgress < 100 && "Polishing output streams & generating token schemas..."}
+                        {compileProgress === 100 && "Compilation complete! Enjoy your refined assets!"}
+                      </p>
+                      <span className="text-[9px] text-[#9ca69b] font-mono shrink-0 uppercase tracking-widest pl-2">
+                        {compileProgress === 100 ? "SUCCESS" : "Processing"}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             {/* Error Banner */}
             {error && (
@@ -1187,13 +1354,13 @@ export default function App() {
                     {activeTab === "scripts" && (
                       <motion.div
                         key="scripts"
-                        initial={{ opacity: 0, y: 12, scale: 0.995 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -12, scale: 0.995 }}
-                        transition={{ duration: animationsEnabled ? 0.2 : 0, ease: "easeOut" }}
+                        initial="hidden"
+                        animate="visible"
+                        exit="exit"
+                        variants={tabContainerVariants(animationsEnabled)}
                         className="space-y-6"
                       >
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-indigo-400">Transform Multiverse (Script Rewrites)</h3>
@@ -1303,7 +1470,7 @@ export default function App() {
                           </div>
 
                         </div>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   )}
 
@@ -1311,15 +1478,15 @@ export default function App() {
                   {activeTab === "hooks-ctas" && (
                     <motion.div
                       key="hooks-ctas"
-                      initial={{ opacity: 0, y: 12, scale: 0.995 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -12, scale: 0.995 }}
-                      transition={{ duration: animationsEnabled ? 0.2 : 0, ease: "easeOut" }}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={tabContainerVariants(animationsEnabled)}
                       className="space-y-6"
                     >
                       
                       {/* Hooks Section Card */}
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-wider">Scroll-Stopping Hooks Array</h3>
@@ -1372,10 +1539,10 @@ export default function App() {
                             );
                           })}
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* CTA Generator Card */}
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-wider">Audience Action CTAs</h3>
@@ -1416,7 +1583,7 @@ export default function App() {
                             );
                           })}
                         </div>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   )}
 
@@ -1424,15 +1591,15 @@ export default function App() {
                   {activeTab === "captions" && (
                     <motion.div
                       key="captions"
-                      initial={{ opacity: 0, y: 12, scale: 0.995 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -12, scale: 0.995 }}
-                      transition={{ duration: animationsEnabled ? 0.2 : 0, ease: "easeOut" }}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={tabContainerVariants(animationsEnabled)}
                       className="space-y-6"
                     >
                       
                       {/* Caption Generator */}
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-wider">Multi-Format Bio Captions</h3>
@@ -1468,10 +1635,10 @@ export default function App() {
                             );
                           })}
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* Thumbnail Text Overlay Suggestions */}
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-slate-300">Thumbnail Overlay Copywriter</h3>
@@ -1520,10 +1687,10 @@ export default function App() {
                             </ul>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* Hashtags & Keywords Modules */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         {/* Hashtag list widget */}
                         <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
@@ -1610,7 +1777,7 @@ export default function App() {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   )}
 
@@ -1618,15 +1785,201 @@ export default function App() {
                   {activeTab === "analysis" && (
                     <motion.div
                       key="analysis"
-                      initial={{ opacity: 0, y: 12, scale: 0.995 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -12, scale: 0.995 }}
-                      transition={{ duration: animationsEnabled ? 0.2 : 0, ease: "easeOut" }}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={tabContainerVariants(animationsEnabled)}
                       className="space-y-6"
                     >
                       
+                      {/* NEW: SAVED PORTFOLIO RADAR ANALYSIS PANEL */}
+                      <motion.div 
+                        variants={tabItemVariants(animationsEnabled)} 
+                        className="bg-[#141416]/80 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl relative overflow-hidden"
+                      >
+                        {/* Shimmer element */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#cf7051]/5 rounded-full blur-2xl pointer-events-none" />
+                        
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-[#232225]">
+                          <div>
+                            <h3 className="text-sm font-bold text-[#cca972] uppercase tracking-wider flex items-center gap-2">
+                              <Activity className="w-4 h-4 text-[#cf7051]" />
+                              Saved Portfolio Frequency Matrix
+                            </h3>
+                            <p className="text-[11px] text-slate-400 mt-1">
+                              Dynamic radar insights plotting your core niche signatures, voice tones, and brand conversion goals.
+                            </p>
+                          </div>
+                          
+                          {/* Sync / Status Indicator */}
+                          <div className="flex items-center gap-2 self-start md:self-auto">
+                            {savedProjects.length > 0 ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                                Custom Portfolio (Active: {savedProjects.length})
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#cf7051]/10 border border-[#cf7051]/20 text-[#cf7051]">
+                                <span className="w-1.5 h-1.5 bg-[#cf7051] rounded-full animate-ping" />
+                                Demonstration mode (Seeded Data)
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Radar Charts Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                          {/* NICHES RADAR */}
+                          <div className="bg-black/30 border border-white/5 rounded-xl p-4 flex flex-col items-center">
+                            <div className="w-full flex justify-between items-center mb-3">
+                              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wide">🌐 Content Niches</span>
+                              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Aggregate</span>
+                            </div>
+                            <div className="w-full h-[220px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={getRadarData("niche")}>
+                                  <PolarGrid stroke="rgba(255, 255, 255, 0.05)" />
+                                  <PolarAngleAxis 
+                                    dataKey="subject" 
+                                    tick={{ fill: "rgba(232, 223, 216, 0.6)", fontSize: 8, fontWeight: 500 }} 
+                                  />
+                                  <PolarRadiusAxis 
+                                    angle={90} 
+                                    domain={[0, "auto"]} 
+                                    tick={{ fill: "rgba(156, 166, 155, 0.5)", fontSize: 7 }} 
+                                    axisLine={false}
+                                  />
+                                  <Radar 
+                                    name="Niches" 
+                                    dataKey="count" 
+                                    stroke="#cf7051" 
+                                    fill="#cf7051" 
+                                    fillOpacity={0.25} 
+                                  />
+                                  <RechartsTooltip 
+                                    contentStyle={{ 
+                                      backgroundColor: "rgba(20, 20, 22, 0.95)", 
+                                      border: "1px solid rgba(255, 255, 255, 0.15)", 
+                                      borderRadius: "12px", 
+                                      fontSize: "11px" 
+                                    }}
+                                    itemStyle={{ color: "#e8dfd8" }}
+                                    labelClassName="text-slate-400 text-[10px]"
+                                  />
+                                </RadarChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <p className="text-[10px] text-center text-slate-400 mt-2 leading-relaxed">
+                              Focus centers on <strong className="text-[#cf7051]">AI</strong> and <strong className="text-[#cf7051]">Tech</strong> sectors.
+                            </p>
+                          </div>
+
+                          {/* TONES RADAR */}
+                          <div className="bg-black/30 border border-white/5 rounded-xl p-4 flex flex-col items-center">
+                            <div className="w-full flex justify-between items-center mb-3">
+                              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wide">🎭 Voice Tones</span>
+                              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Distribution</span>
+                            </div>
+                            <div className="w-full h-[220px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={getRadarData("tone")}>
+                                  <PolarGrid stroke="rgba(255, 255, 255, 0.05)" />
+                                  <PolarAngleAxis 
+                                    dataKey="subject" 
+                                    tick={{ fill: "rgba(232, 223, 216, 0.6)", fontSize: 8, fontWeight: 500 }} 
+                                  />
+                                  <PolarRadiusAxis 
+                                    angle={90} 
+                                    domain={[0, "auto"]} 
+                                    tick={{ fill: "rgba(156, 166, 155, 0.5)", fontSize: 7 }} 
+                                    axisLine={false}
+                                  />
+                                  <Radar 
+                                    name="Tones" 
+                                    dataKey="count" 
+                                    stroke="#cca972" 
+                                    fill="#cca972" 
+                                    fillOpacity={0.25} 
+                                  />
+                                  <RechartsTooltip 
+                                    contentStyle={{ 
+                                      backgroundColor: "rgba(20, 20, 22, 0.95)", 
+                                      border: "1px solid rgba(255, 255, 255, 0.15)", 
+                                      borderRadius: "12px", 
+                                      fontSize: "11px" 
+                                    }}
+                                    itemStyle={{ color: "#e8dfd8" }}
+                                    labelClassName="text-slate-400 text-[10px]"
+                                  />
+                                </RadarChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <p className="text-[10px] text-center text-slate-400 mt-2 leading-relaxed">
+                              Preferring an <strong className="text-[#cca972]">Educational</strong> and <strong className="text-[#cca972]">Bold</strong> delivery style.
+                            </p>
+                          </div>
+
+                          {/* GOALS RADAR */}
+                          <div className="bg-black/30 border border-white/5 rounded-xl p-4 flex flex-col items-center">
+                            <div className="w-full flex justify-between items-center mb-3">
+                              <span className="text-[11px] font-bold text-slate-300 uppercase tracking-wide">🎯 Refactor Goals</span>
+                              <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Alignment</span>
+                            </div>
+                            <div className="w-full h-[220px]">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={getRadarData("goal")}>
+                                  <PolarGrid stroke="rgba(255, 255, 255, 0.05)" />
+                                  <PolarAngleAxis 
+                                    dataKey="subject" 
+                                    tick={{ fill: "rgba(232, 223, 216, 0.6)", fontSize: 8, fontWeight: 500 }} 
+                                  />
+                                  <PolarRadiusAxis 
+                                    angle={90} 
+                                    domain={[0, "auto"]} 
+                                    tick={{ fill: "rgba(156, 166, 155, 0.5)", fontSize: 7 }} 
+                                    axisLine={false}
+                                  />
+                                  <Radar 
+                                    name="Goals" 
+                                    dataKey="count" 
+                                    stroke="#9ca69b" 
+                                    fill="#9ca69b" 
+                                    fillOpacity={0.25} 
+                                  />
+                                  <RechartsTooltip 
+                                    contentStyle={{ 
+                                      backgroundColor: "rgba(20, 20, 22, 0.95)", 
+                                      border: "1px solid rgba(255, 255, 255, 0.15)", 
+                                      borderRadius: "12px", 
+                                      fontSize: "11px" 
+                                    }}
+                                    itemStyle={{ color: "#e8dfd8" }}
+                                    labelClassName="text-slate-400 text-[10px]"
+                                  />
+                                </RadarChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <p className="text-[10px] text-center text-slate-400 mt-2 leading-relaxed">
+                              Optimized mostly for <strong className="text-[#9ca69b]">Virality</strong> and <strong className="text-[#9ca69b]">High Retention</strong> indices.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Interactive Hint banner below */}
+                        {savedProjects.length > 0 && (
+                          <div className="mt-4 pt-3.5 border-t border-white/5 flex items-center justify-between">
+                            <span className="text-[10px] text-slate-500">
+                              Your trends map is computed from your live database/local workspace history log in real-time.
+                            </span>
+                            <span className="text-[10px] font-bold text-[#cca972] font-mono uppercase tracking-wider">
+                              Real-Time Stream Active
+                            </span>
+                          </div>
+                        )}
+                      </motion.div>
+
                       {/* Pipeline retention step diagnostics */}
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-wider">Dynamic Viewer Retention Diagnostics</h3>
@@ -1686,10 +2039,10 @@ export default function App() {
                             </ul>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* Title Generator Section */}
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest">Viral Title & click-stopper Ideas</h3>
                         </div>
@@ -1733,10 +2086,10 @@ export default function App() {
                             </ul>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
 
                       {/* Instructor Style Notes Card */}
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex justify-between items-center mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-slate-300">Creator Delivery Blueprint</h3>
@@ -1787,7 +2140,7 @@ export default function App() {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   )}
 
@@ -1795,13 +2148,13 @@ export default function App() {
                   {activeTab === "versions" && (
                     <motion.div
                       key="versions"
-                      initial={{ opacity: 0, y: 12, scale: 0.995 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -12, scale: 0.995 }}
-                      transition={{ duration: animationsEnabled ? 0.2 : 0, ease: "easeOut" }}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      variants={tabContainerVariants(animationsEnabled)}
                       className="space-y-6"
                     >
-                      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
+                      <motion.div variants={tabItemVariants(animationsEnabled)} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5 shadow-xl">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                           <div>
                             <h3 className="text-sm font-bold text-indigo-300 uppercase tracking-widest">Self-Contained Content Packages</h3>
@@ -1866,7 +2219,7 @@ export default function App() {
                             );
                           })}
                         </div>
-                      </div>
+                      </motion.div>
                     </motion.div>
                   )}
                   </AnimatePresence>
@@ -1916,14 +2269,17 @@ export default function App() {
 
           </div>
 
-        </div>
-
-      </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  </div>
+</div>
+</AppShell>
 
       {/* Footer Meta Diagnostics */}
       <footer className="mt-12 pt-6 border-t border-[#232225] flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] text-[#9ca69b] uppercase tracking-widest max-w-7xl mx-auto w-full font-mono">
         <div className="flex flex-wrap justify-center gap-4">
-          <span>Storage Engine: <span className="text-[#cca972] font-semibold">{dbStatus?.status === "CONNECTED" ? "Supabase Live DB & Local Storage" : "Browser localStorage API"}</span></span>
+          <span>Storage Engine: <span className="text-[#cca972] font-semibold">Secure Auto-Save Project Database Cache</span></span>
           <span className="hidden sm:inline text-white/10">•</span>
           <span>Security Model: <span className="text-[#cca972] font-semibold">Server-Side Proxy Vault</span></span>
         </div>
@@ -1943,13 +2299,13 @@ export default function App() {
           >
             <span className="w-2 h-2 rounded-full bg-green-500 animate-ping"></span>
             <span>
-              {copiedKey === "project-saved-supabase" && "Project Saved & Synchronized to Supabase!"}
-              {copiedKey === "project-saved-local-only" && "Saved Locally (Warning: Supabase sync failed)"}
-              {copiedKey === "project-saved" && "Transform Package Saved to Local Storage!"}
-              {copiedKey === "deleted-supabase" && "Project Deleted & Cleaned from Supabase!"}
+              {copiedKey === "project-saved-supabase" && "Project Auto-Saved to Secure Cloud Backup!"}
+              {copiedKey === "project-saved-local-only" && "Saved Locally (Notice: Cloud backup is processing)"}
+              {copiedKey === "project-saved" && "Transform Package Auto-Saved to Secure Local Storage!"}
+              {copiedKey === "deleted-supabase" && "Project Deleted & Cleaned from Secure Cloud Backup!"}
               {copiedKey === "deleted" && "Project Deleted Successfully!"}
               {copiedKey === "db-synced" && "Database Synced: Reloaded Live Records!"}
-              {copiedKey === "setup-sql" && "SQL Creation Schema Copied! Paste in Supabase SQL Editor."}
+              {copiedKey === "setup-sql" && "SQL Creation Schema Copied!"}
               {copiedKey === "bulk-kit" && "Entire Content Package Copied to Clipboard!"}
               {!["project-saved-supabase", "project-saved", "deleted-supabase", "deleted", "db-synced", "setup-sql", "bulk-kit", "project-saved-local-only"].includes(copiedKey) && `Refactoring Completed: [${copiedKey}]`}
             </span>

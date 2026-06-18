@@ -23,6 +23,23 @@
   background: rgba(99, 102, 241, 0.4);
 }
 
+/* Beautiful smooth theme-switching transitions for containers, inputs, buttons, and text */
+#creatoros-app-root,
+#creatoros-app-root header,
+#creatoros-app-root select,
+#creatoros-app-root input,
+#creatoros-app-root textarea,
+#creatoros-app-root button,
+#creatoros-app-root div,
+#creatoros-app-root p,
+#creatoros-app-root span,
+#creatoros-app-root a {
+  transition: background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.45s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.45s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 /* High Contrast Light Mode Stylesheet */
 .theme-light {
   background-color: #f7f5f1 !important;

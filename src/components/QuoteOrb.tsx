@@ -47,6 +47,42 @@ const QUOTES: QuoteItem[] = [
     author: "Retention Lead",
     lang: "English",
   },
+  {
+    id: "e6",
+    text: "Authenticity isn't about perfection; it’s about signaling shared flaws. Relatability is the ultimate distribution channel.",
+    author: "Brand Consultant",
+    lang: "English",
+  },
+  {
+    id: "e7",
+    text: "The best pacing holds back. Make the silence between your key words as loaded with subtext as your main hook.",
+    author: "Story Coach",
+    lang: "English",
+  },
+  {
+    id: "e8",
+    text: "Don’t ask for the subscription early on. Earn their attention first, and the commitment will lock itself in naturally.",
+    author: "Engagement Specialist",
+    lang: "English",
+  },
+  {
+    id: "e9",
+    text: "The climax isn’t just a high point; it is the ultimate payoff of the promise you made in the first three seconds.",
+    author: "Directing Manual",
+    lang: "English",
+  },
+  {
+    id: "e10",
+    text: "Every edit should delete an unnecessary breath. If a frame doesn't move the narrative forward, it is a distraction.",
+    author: "Pacing Editor",
+    lang: "English",
+  },
+  {
+    id: "e11",
+    text: "If your script feels structured like an academic essay, throw it out. Write exactly how you speak when excited with friends.",
+    author: "Script Architect",
+    lang: "English",
+  },
   // Hinglish
   {
     id: "h1",
@@ -76,6 +112,42 @@ const QUOTES: QuoteItem[] = [
     id: "h5",
     text: "Simple spoken lines always beat high-sounding English definitions. Logon ke dil tak pahuncho, dimaag khud-ba-khud sunega.",
     author: "Public Speaker",
+    lang: "Hinglish",
+  },
+  {
+    id: "h6",
+    text: "Audience ka dimaag bohot tez hai. Agar unhe laga ki aap unka time consume kar rahe ho bina value diye, toh swipe up pakka hai.",
+    author: "Retention Expert",
+    lang: "Hinglish",
+  },
+  {
+    id: "h7",
+    text: "Hook me sawaal poocho aur video ke end me uska answer do. Beech ka pacing suspense aur curiosities se bhara hona chahiye.",
+    author: "Narrative Director",
+    lang: "Hinglish",
+  },
+  {
+    id: "h8",
+    text: "Technical words se door raho. Baat aisi karo jaise dosto se chai ki tapri pe baithkar discuss kar rahe ho.",
+    author: "Script Editor",
+    lang: "Hinglish",
+  },
+  {
+    id: "h9",
+    text: "Emotion hi action trigger karta hai. Agar viewer video dekhkar koshish ya jazba feel nahi karega, toh share kyun karega?",
+    author: "Psych Vibe",
+    lang: "Hinglish",
+  },
+  {
+    id: "h10",
+    text: "Ek simple story line humesha complex graphs aur stats se behtar retention deti hai. Story me human connect daaliye!",
+    author: "Storyteller Hub",
+    lang: "Hinglish",
+  },
+  {
+    id: "h11",
+    text: "Aapke video ko unke 1.5x speed par chalne ki zaroorat nahi honi chahiye; natural pacing ko concise aur raw rakhein.",
+    author: "Editing Mastery",
     lang: "Hinglish",
   }
 ];

@@ -74,6 +74,71 @@ export const soundManager = {
     }
   },
 
+  // Play a beautiful, tactile mechanical switch sound effect
+  playSwitch(toLight: boolean) {
+    if (this.getMuteStatus()) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+
+      // Primary click transient (crisp mechanical contact)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      
+      // Secondary resonance (tactile hollow weight/body of the switch casing)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+
+      // Acoustic tuning depending on toggle direction:
+      // - To Light (On): Brighter, snapping up, crisper tick
+      // - To Dark (Off): Rounder, clicking down, softer wooden seating
+      const snapStart = toLight ? 900 : 720;
+      const snapEnd = toLight ? 480 : 380;
+      const bodyPitch = toLight ? 210 : 170;
+
+      // 1. Crisp high-transient click
+      osc1.type = "triangle";
+      osc1.frequency.setValueAtTime(snapStart, now);
+      osc1.frequency.exponentialRampToValueAtTime(snapEnd, now + 0.025);
+
+      gain1.gain.setValueAtTime(0.045, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+
+      // Warm lowpass filter to unify the sound textures
+      const filter1 = ctx.createBiquadFilter();
+      filter1.type = "lowpass";
+      filter1.frequency.setValueAtTime(1500, now);
+
+      osc1.connect(filter1);
+      filter1.connect(gain1);
+      gain1.connect(ctx.destination);
+
+      // 2. Delayed mechanical seating bump (satisfying 12ms delayed structural decay)
+      const seatingDelay = 0.012;
+      osc2.type = "sine";
+      osc2.frequency.setValueAtTime(bodyPitch, now + seatingDelay);
+      osc2.frequency.exponentialRampToValueAtTime(bodyPitch * 0.75, now + seatingDelay + 0.04);
+
+      gain2.gain.setValueAtTime(0, now);
+      gain2.gain.linearRampToValueAtTime(0.035, now + seatingDelay + 0.004);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + seatingDelay + 0.04);
+
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+
+      // Fire audio nodes
+      osc1.start(now);
+      osc1.stop(now + 0.03);
+
+      osc2.start(now + seatingDelay);
+      osc2.stop(now + seatingDelay + 0.045);
+    } catch (e) {
+      console.warn("Audio switch play failed:", e);
+    }
+  },
+
   // Play light sci-fi tick for hover
   playHover() {
     if (this.getMuteStatus()) return;

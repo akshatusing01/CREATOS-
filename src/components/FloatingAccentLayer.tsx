@@ -38,14 +38,14 @@ export default function FloatingAccentLayer() {
 
     // Create a pool of premium particles matching our clay rose + gold + sand colors
     const particleColors = [
-      "rgba(207, 112, 81, 0.22)",  // Clay Rose
-      "rgba(202, 169, 114, 0.18)", // Muted Gold
-      "rgba(156, 166, 155, 0.15)", // Sage
-      "rgba(232, 223, 216, 0.12)"  // Sand
+      "rgba(207, 112, 81, 0.35)",  // Clay Rose
+      "rgba(202, 169, 114, 0.3)",  // Muted Gold
+      "rgba(147, 197, 253, 0.25)", // Luminous Indigo/Blue
+      "rgba(167, 139, 250, 0.3)"   // Glowing Sage/Mint
     ];
 
     const particles: Particle[] = [];
-    const maxParticles = Math.min(30, Math.floor((width * height) / 35000));
+    const maxParticles = Math.min(35, Math.floor((width * height) / 28000));
 
     for (let i = 0; i < maxParticles; i++) {
       particles.push(createParticle(width, height, particleColors));
@@ -54,13 +54,13 @@ export default function FloatingAccentLayer() {
     function createParticle(w: number, h: number, colors: string[], isNew = false): Particle {
       return {
         x: Math.random() * w,
-        y: isNew ? h + 10 : Math.random() * h,
-        size: Math.random() * 4 + 1.2,
-        speedX: (Math.random() - 0.5) * 0.15,
-        speedY: -(Math.random() * 0.25 + 0.08), // upwards drift
+        y: isNew ? h + 15 : Math.random() * h,
+        size: Math.random() * 12 + 5, // Beautiful, prominent bubble sizes
+        speedX: (Math.random() - 0.5) * 0.12,
+        speedY: -(Math.random() * 0.22 + 0.08), // upwards drift
         color: colors[Math.floor(Math.random() * colors.length)],
-        alpha: Math.random() * 0.7 + 0.1,
-        alphaSpeed: (Math.random() - 0.5) * 0.005
+        alpha: Math.random() * 0.65 + 0.15,
+        alphaSpeed: (Math.random() - 0.5) * 0.004
       };
     }
 
@@ -119,18 +119,44 @@ export default function FloatingAccentLayer() {
         }
 
         // if particle drifts off the top or sides, regenerate at the bottom
-        if (p.y < -10 || p.x < -10 || p.x > width + 10) {
+        if (p.y < -p.size - 5 || p.x < -p.size - 5 || p.x > width + p.size + 5) {
           particles[i] = createParticle(width, height, particleColors, true);
         }
 
         ctx.save();
         ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
-        ctx.fillStyle = p.color;
         
-        // Render a refined glowing circlet or solid fuzzy dot
+        // Specular glow configuration matching bubble color
+        ctx.shadowBlur = p.size * 2.2;
+        ctx.shadowColor = p.color;
+
+        // Custom multi-stop radial gradient for elegant glass bubble reflection
+        const bubbleGrad = ctx.createRadialGradient(
+          p.x - p.size * 0.25, 
+          p.y - p.size * 0.25, 
+          p.size * 0.05, 
+          p.x, 
+          p.y, 
+          p.size
+        );
+        bubbleGrad.addColorStop(0, "rgba(255, 255, 255, 0.75)"); // Intense reflection dot
+        bubbleGrad.addColorStop(0.2, p.color);
+        bubbleGrad.addColorStop(0.85, "rgba(255, 255, 255, 0.04)");
+        bubbleGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+        ctx.fillStyle = bubbleGrad;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
+
+        // Delicate, shiny high-contrast outer bubble rim
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = 0.75;
+        ctx.shadowBlur = 0; // Clear stroke contour
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.stroke();
+
         ctx.restore();
       }
 

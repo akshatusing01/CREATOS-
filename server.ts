@@ -254,11 +254,307 @@ const contentPackageSchema = {
   ]
 };
 
+const scoreItemSchema = {
+  type: Type.OBJECT,
+  properties: {
+    score: { type: Type.INTEGER },
+    reason: { type: Type.STRING },
+    fix: { type: Type.STRING }
+  },
+  required: ["score", "reason", "fix"]
+};
+
+const scriptBreakdownItemSchema = {
+  type: Type.OBJECT,
+  properties: {
+    score: { type: Type.INTEGER },
+    present: { type: Type.BOOLEAN },
+    notes: { type: Type.STRING },
+    fix: { type: Type.STRING }
+  },
+  required: ["score", "present", "notes", "fix"]
+};
+
+const creatorIntelligenceSchema = {
+  type: Type.OBJECT,
+  properties: {
+    workspace: { type: Type.STRING },
+    account: {
+      type: Type.OBJECT,
+      properties: {
+        platform: { type: Type.STRING },
+        username: { type: Type.STRING },
+        profileUrl: { type: Type.STRING },
+        niche: { type: Type.STRING },
+        audienceType: { type: Type.STRING },
+        contentPillars: { type: Type.ARRAY, items: { type: Type.STRING } },
+        toneOfVoice: { type: Type.STRING },
+        visualStyle: { type: Type.STRING },
+        postingFrequency: { type: Type.STRING },
+        consistencyScore: { type: Type.INTEGER },
+        dataConfidence: { type: Type.INTEGER }
+      },
+      required: [
+        "platform", "username", "profileUrl", "niche", "audienceType",
+        "contentPillars", "toneOfVoice", "visualStyle", "postingFrequency",
+        "consistencyScore", "dataConfidence"
+      ]
+    },
+    creatorDNA: {
+      type: Type.OBJECT,
+      properties: {
+        summary: { type: Type.STRING },
+        bestFormat: { type: Type.STRING },
+        bestHookType: { type: Type.STRING },
+        bestCtaType: { type: Type.STRING },
+        bestLengthRange: { type: Type.STRING },
+        mainBottleneck: { type: Type.STRING },
+        biggestOpportunity: { type: Type.STRING },
+        nextFocusArea: { type: Type.STRING }
+      },
+      required: [
+        "summary", "bestFormat", "bestHookType", "bestCtaType",
+        "bestLengthRange", "mainBottleneck", "biggestOpportunity", "nextFocusArea"
+      ]
+    },
+    performanceScores: {
+      type: Type.OBJECT,
+      properties: {
+        hookStrength: scoreItemSchema,
+        retentionPotential: scoreItemSchema,
+        flowClarity: scoreItemSchema,
+        emotionalPull: scoreItemSchema,
+        ctaStrength: scoreItemSchema,
+        packagingStrength: scoreItemSchema,
+        audienceMatch: scoreItemSchema,
+        overallQuality: scoreItemSchema
+      },
+      required: [
+        "hookStrength", "retentionPotential", "flowClarity", "emotionalPull",
+        "ctaStrength", "packagingStrength", "audienceMatch", "overallQuality"
+      ]
+    },
+    winnerAnalysis: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          postId: { type: Type.STRING },
+          title: { type: Type.STRING },
+          views: { type: Type.INTEGER },
+          likes: { type: Type.INTEGER },
+          comments: { type: Type.INTEGER },
+          shares: { type: Type.INTEGER },
+          saves: { type: Type.INTEGER },
+          score: { type: Type.INTEGER },
+          whyItWorked: { type: Type.STRING },
+          hookType: { type: Type.STRING },
+          emotionalTrigger: { type: Type.STRING },
+          retentionDrivers: { type: Type.ARRAY, items: { type: Type.STRING } },
+          ctaType: { type: Type.STRING },
+          patternTags: { type: Type.ARRAY, items: { type: Type.STRING } }
+        },
+        required: [
+          "postId", "title", "views", "likes", "comments", "shares", "saves",
+          "score", "whyItWorked", "hookType", "emotionalTrigger", "retentionDrivers",
+          "ctaType", "patternTags"
+        ]
+      }
+    },
+    failureAnalysis: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          postId: { type: Type.STRING },
+          title: { type: Type.STRING },
+          views: { type: Type.INTEGER },
+          likes: { type: Type.INTEGER },
+          comments: { type: Type.INTEGER },
+          shares: { type: Type.INTEGER },
+          saves: { type: Type.INTEGER },
+          score: { type: Type.INTEGER },
+          whyItUnderperformed: { type: Type.STRING },
+          problemAreas: { type: Type.ARRAY, items: { type: Type.STRING } },
+          fixSuggestions: { type: Type.ARRAY, items: { type: Type.STRING } },
+          betterVersionDirection: { type: Type.STRING }
+        },
+        required: [
+          "postId", "title", "views", "likes", "comments", "shares", "saves",
+          "score", "whyItUnderperformed", "problemAreas", "fixSuggestions",
+          "betterVersionDirection"
+        ]
+      }
+    },
+    scriptBreakdown: {
+      type: Type.OBJECT,
+      properties: {
+        hook: scriptBreakdownItemSchema,
+        setup: scriptBreakdownItemSchema,
+        problem: scriptBreakdownItemSchema,
+        curiosityGap: scriptBreakdownItemSchema,
+        proof: scriptBreakdownItemSchema,
+        value: scriptBreakdownItemSchema,
+        story: scriptBreakdownItemSchema,
+        transition: scriptBreakdownItemSchema,
+        cta: scriptBreakdownItemSchema,
+        closing: scriptBreakdownItemSchema
+      },
+      required: [
+        "hook", "setup", "problem", "curiosityGap", "proof", "value",
+        "story", "transition", "cta", "closing"
+      ]
+    },
+    growthCoach: {
+      type: Type.OBJECT,
+      properties: {
+        keepDoing: { type: Type.ARRAY, items: { type: Type.STRING } },
+        stopDoing: { type: Type.ARRAY, items: { type: Type.STRING } },
+        improveFirst: { type: Type.ARRAY, items: { type: Type.STRING } },
+        testNext: { type: Type.ARRAY, items: { type: Type.STRING } },
+        bottleneck: { type: Type.STRING },
+        highestLeverageFix: { type: Type.STRING },
+        nextImprovementLayer: { type: Type.STRING }
+      },
+      required: [
+        "keepDoing", "stopDoing", "improveFirst", "testNext",
+        "bottleneck", "highestLeverageFix", "nextImprovementLayer"
+      ]
+    },
+    contentStrategy: {
+      type: Type.OBJECT,
+      properties: {
+        nextTopics: { type: Type.ARRAY, items: { type: Type.STRING } },
+        anglesToTry: { type: Type.ARRAY, items: { type: Type.STRING } },
+        formatsToTry: { type: Type.ARRAY, items: { type: Type.STRING } },
+        formatsToAvoid: { type: Type.ARRAY, items: { type: Type.STRING } },
+        contentGaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+        opportunities: { type: Type.ARRAY, items: { type: Type.STRING } }
+      },
+      required: [
+        "nextTopics", "anglesToTry", "formatsToTry", "formatsToAvoid", "contentGaps", "opportunities"
+      ]
+    },
+    scriptDoctor: {
+      type: Type.OBJECT,
+      properties: {
+        originalScript: { type: Type.STRING },
+        strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+        weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } },
+        rewrite: { type: Type.STRING },
+        shortRewrite: { type: Type.STRING },
+        hookOptions: { type: Type.ARRAY, items: { type: Type.STRING } },
+        ctaOptions: { type: Type.ARRAY, items: { type: Type.STRING } },
+        notes: { type: Type.STRING }
+      },
+      required: [
+        "originalScript", "strengths", "weaknesses", "rewrite", "shortRewrite",
+        "hookOptions", "ctaOptions", "notes"
+      ]
+    },
+    history: {
+      type: Type.OBJECT,
+      properties: {
+        reportId: { type: Type.STRING },
+        createdAt: { type: Type.STRING },
+        saved: { type: Type.BOOLEAN }
+      },
+      required: ["reportId", "createdAt", "saved"]
+    },
+    confidence: {
+      type: Type.OBJECT,
+      properties: {
+        overall: { type: Type.INTEGER },
+        notes: { type: Type.STRING }
+      },
+      required: ["overall", "notes"]
+    }
+  },
+  required: [
+    "workspace", "account", "creatorDNA", "performanceScores", "winnerAnalysis",
+    "failureAnalysis", "scriptBreakdown", "growthCoach", "contentStrategy",
+    "scriptDoctor", "history", "confidence"
+  ]
+};
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
 
   app.use(express.json({ limit: '15mb' }));
+
+  // API Route for Creator Intelligence Deep Account Analysis
+  app.post("/api/creator-intelligence/analyze", async (req, res) => {
+    try {
+      const {
+        username,
+        profileUrl,
+        manualReels,
+        scriptText,
+        captionText,
+        engagementMetrics,
+        postNotes,
+        profileMemory
+      } = req.body;
+
+      // Initialize API client safely
+      const ai = getGeminiClient();
+
+      const systemInstruction = `You are the lead Creator Intelligence Engine inside CreatorOS.
+Your goal is to deeply analyze Instagram creator account patterns, content performance, script structures, and diagnose weaknesses to generate precise improvement guidance.
+
+Do not promise guaranteed virality.
+Do not fabricate platform metrics—if data is partial, evaluate what is present and note confidence clearly.
+If analysis is inferred, mark it so.
+
+Tone: Practical, objective, sharp, highly professional, elite strategist, encouraging but strict content director. Match the Atelier design aesthetic and values of refinement and depth.
+
+CRITICAL RULES:
+- If no Instagram username or profile is connected/provided, focus on analyzing the manual input pieces of scripts, captions, or notes provided, and generate a customized strategic report.
+- Break down scripts into exact components (Hook, Setup, Problem, Curiosity Gap, Proof, Value, Story, Transition, CTA, Closing). Grade them 0-100 with clear actionable fixes.
+- Generate precise Creator DNA summaries.
+- Populate ALL fields in the JSON response model schema accurately. Avoid empty or generic placeholders. Use realistic ranges (e.g. scores between 30 and 95, realistic view metrics for winner/failure posts based on engagement level if provided).`;
+
+      const promptMsg = `Perform a comprehensive Instagram and script-level content intelligence analysis on the following inputs:
+---
+Instagram Username/Profile: "${username || 'Not connected'}"
+Profile URL: "${profileUrl || 'None'}"
+Manual Reels/Links: "${manualReels ? JSON.stringify(manualReels) : 'None'}"
+Script Text: "${scriptText || 'None provided'}"
+Caption/Post Text: "${captionText || 'None provided'}"
+Engagement Metrics / Context: "${engagementMetrics ? JSON.stringify(engagementMetrics) : 'None'}"
+Post Notes / Extra: "${postNotes || 'None'}"
+Global Creator Preferences: "${profileMemory ? JSON.stringify(profileMemory) : 'None'}"
+---
+Generate the formal intelligence report matching the JSON Response Schema. Offer real customized content strategies, direct Script Doctor rewrites, and growth coach action vectors. Ensure the history reportId is newly generated (e.g. "intel_" + Date.now()).`;
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: promptMsg,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.75,
+          responseMimeType: "application/json",
+          responseSchema: creatorIntelligenceSchema
+        }
+      });
+
+      const rawText = response.text;
+      if (!rawText) {
+        throw new Error("No response from Gemini Creator Intelligence model.");
+      }
+
+      const parsedData = JSON.parse(rawText.trim());
+      return res.json({ success: true, data: parsedData });
+
+    } catch (err: any) {
+      console.error("Creator Intelligence Error:", err);
+      return res.status(500).json({
+        error: err.message || "An error occurred during Creator Intelligence processing. Please ensure your GEMINI_API_KEY is configured in your Secrets Panel in AI Studio.",
+        details: err.stack ? err.stack.toString() : ""
+      });
+    }
+  });
 
   // API Route for complete transformation
   app.post("/api/transform", async (req, res) => {
