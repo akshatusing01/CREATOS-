@@ -9,12 +9,12 @@ interface ProfileConfigProps {
 }
 
 const DEFAULT_PROFILE: ProfileMemory = {
-  language: "English",
-  niche: "Mixed",
-  tone: "Educational",
+  language: "Hinglish",
+  niche: "Tech / coding / dev",
+  tone: "Smart friend",
   style: "Storytelling",
-  hookStyle: "Curiosity gap",
-  ctaStyle: "Trigger word comment builder",
+  hookStyle: "Mistake hook (e.g. 'Bhai, ye mistake mat karo')",
+  ctaStyle: "Comment trigger keyword (e.g. Comment 'CODE' to get direct link)",
   rewriteStrength: "Medium rewrite",
 };
 
@@ -131,8 +131,9 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
             }}
             className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
-            <option value="English">English</option>
             <option value="Hinglish">Hinglish</option>
+            <option value="Hindi">Hindi</option>
+            <option value="English">English</option>
           </select>
         </div>
 
@@ -146,13 +147,18 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
             }}
             className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
-            <option value="AI">AI / AI Agents</option>
-            <option value="Tech">Tech / Coding</option>
-            <option value="Business">Business / Startups</option>
-            <option value="Storytelling">Storytelling</option>
-            <option value="Documentary">Documentary</option>
-            <option value="Education">Education</option>
-            <option value="Mixed">Mixed / General</option>
+            <option value="AI tools for Indian students">AI tools for Indian students</option>
+            <option value="Tech / coding / dev">Tech / coding / dev</option>
+            <option value="JEE / NEET / UPSC / SSC">JEE / NEET / UPSC / SSC</option>
+            <option value="College / student life">College / student life</option>
+            <option value="Finance / money / investing">Finance / money / investing</option>
+            <option value="Startup / entrepreneurship">Startup / entrepreneurship</option>
+            <option value="Freelancing / remote work">Freelancing / remote work</option>
+            <option value="Personal branding">Personal branding</option>
+            <option value="Edtech / education">Edtech / education</option>
+            <option value="Fitness / self-improvement">Fitness / self-improvement</option>
+            <option value="Meme / entertainment">Meme / entertainment</option>
+            <option value="Mixed / General">Mixed / General</option>
           </select>
         </div>
 
@@ -166,12 +172,14 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
             }}
             className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
-            <option value="Professional">Professional</option>
-            <option value="Casual">Casual / Direct</option>
-            <option value="Bold">Bold / Assertive</option>
-            <option value="Emotional">Emotional / Relatable</option>
-            <option value="Educational">Educational</option>
-            <option value="Story-driven">Story-driven</option>
+            <option value="Friendly teacher">Friendly teacher</option>
+            <option value="Smart friend">Smart friend</option>
+            <option value="Expert advisor">Expert advisor</option>
+            <option value="Founder voice">Founder voice</option>
+            <option value="Student mentor">Student mentor</option>
+            <option value="Straightforward Indian creator">Straightforward Indian creator</option>
+            <option value="Proof-based educator">Proof-based educator</option>
+            <option value="Storytelling creator">Storytelling creator</option>
           </select>
         </div>
 
@@ -201,6 +209,7 @@ export default function ProfileConfig({ onSync }: ProfileConfigProps) {
             }}
             className="w-full bg-[#0c0c0e]/80 hover:bg-[#0c0c0e]/95 text-[#e8dfd8] text-xs rounded-xl py-2 px-3 border border-[#232225] focus:border-[#cf7051]/60 focus:outline-none transition cursor-pointer"
           >
+            <option value="Hinglish Reel Format">Hinglish Reel Format</option>
             <option value="Storytelling">Classic Story Arc</option>
             <option value="Documentary">Vox-style Mini-doc</option>
             <option value="AI / Tech">High-Tempo Technical Review</option>

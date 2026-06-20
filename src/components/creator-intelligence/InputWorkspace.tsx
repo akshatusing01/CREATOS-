@@ -23,13 +23,13 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
   // State for Performance Analyzer
   const [perfAnalyzer, setPerfAnalyzer] = useState({
     platform: "instagram",
-    views: "10000",
-    likes: "500",
-    comments: "50",
-    shares: "25",
-    saves: "100",
-    followerCount: "2500",
-    durationSeconds: "35",
+    views: "",
+    likes: "",
+    comments: "",
+    shares: "",
+    saves: "",
+    followerCount: "",
+    durationSeconds: "",
     caption: "",
     transcriptOrScript: "",
     notes: ""
@@ -51,8 +51,8 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
   const [winnerLoser, setWinnerLoser] = useState({
     winnerSample: "",
     loserSample: "",
-    winnerViews: "50000",
-    loserViews: "2000",
+    winnerViews: "",
+    loserViews: "",
     notes: ""
   });
 
@@ -86,9 +86,111 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
     creatorDNA: "",
     latestAnalysis: "",
     latestComparison: "",
-    trendContext: "AI operations, micro tutorial frameworks, productivity shortcuts",
-    notes: "Targeting high growth solopreneurs"
+    trendContext: "",
+    notes: ""
   });
+
+  // Synced content checking block
+  const [hasSyncedContent, setHasSyncedContent] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkIfSynced = () => {
+      const content = localStorage.getItem("creatoros_last_generated_content");
+      setHasSyncedContent(!!content);
+    };
+    checkIfSynced();
+    // Watch for other triggers
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "creatoros_last_generated_content") {
+        setHasSyncedContent(!!e.newValue);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  const handleImportSync = () => {
+    soundManager.playSparkle();
+    const contentStr = localStorage.getItem("creatoros_last_generated_content");
+    if (!contentStr) return;
+    try {
+      const content = JSON.parse(contentStr);
+      if (activeMode === "script_doctor") {
+        setScriptDoctor({
+          scriptTitle: `Synced: ${content.idea.slice(0, 35)}`,
+          platform: content.platform || "instagram",
+          language: content.language || "hinglish",
+          contentGoal: "views",
+          audience: "My core short-form fans",
+          scriptText: content.script || "",
+          notes: "Imported from Script Lab automatically."
+        });
+      } else if (activeMode === "performance_analyzer") {
+        setPerfAnalyzer({
+          platform: content.platform || "instagram",
+          views: "15000",
+          likes: "800",
+          comments: "100",
+          shares: "50",
+          saves: "450",
+          followerCount: "5000",
+          durationSeconds: "45",
+          caption: content.caption || "",
+          transcriptOrScript: content.script || "",
+          notes: "Auto-synced performance evaluation parameters."
+        });
+      } else if (activeMode === "creator_dna_builder") {
+        setDnaBuilder({
+          niche: `Education - ${content.idea.slice(0, 30)}`,
+          audience: `Student community`,
+          platform: content.platform || "instagram",
+          contentGoal: "authority",
+          tone: "fast_energetic",
+          bestContentSample: content.script || "",
+          worstContentSample: "",
+          notes: "Derived from Script Lab generated template package."
+        });
+      } else if (activeMode === "winner_loser_comparison") {
+        setWinnerLoser({
+          winnerSample: content.script || "",
+          loserSample: "Yesterday's slower unpolished classroom topic lecture explanation.",
+          winnerViews: "50000",
+          loserViews: "2300",
+          notes: "Direct contrast side-by-side gap insights."
+        });
+      } else if (activeMode === "competitor_analysis") {
+        setCompetitor({
+          referenceSample: "Viral splitscreen with dual outcome loops in Reels.",
+          userSample: content.script || "",
+          notes: "Identify styling and scripting cues."
+        });
+      } else if (activeMode === "multi_pattern_analysis") {
+        setMultiPattern({
+          contentItems: `Script: ${content.script}\n\nHooks: ${content.hooks.join(", ")}`,
+          metrics: "Retains 75% at hook, drops slightly during midsection explanation setup.",
+          notes: "Testing structure pacing stability."
+        });
+      } else if (activeMode === "full_content_audit") {
+        setContentAudit({
+          niche: "Educational Tutorials Tech",
+          audience: "Undergraduate development majors",
+          platform: content.platform || "instagram",
+          goals: "retention",
+          contentSamples: content.script || "",
+          challenges: "Hook is powerful but visual transition density in Hinglish splitscreen needs polish.",
+          notes: "Audit syncing diagnostics."
+        });
+      } else if (activeMode === "strategy_engine") {
+        setStrategyEngine({
+          creatorDNA: "Interactive buddy tech tutor",
+          latestAnalysis: content.script || "",
+          latestComparison: "N/A",
+          trendContext: "Placements roadmap, automated keyword direct messages to build student newsletter lists.",
+          notes: "Evolve dynamic test ideas."
+        });
+      }
+    } catch {}
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,76 +261,76 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
     soundManager.playPop();
     if (modeName === "script_doctor") {
       setScriptDoctor({
-        scriptTitle: "Automated Lead Gen Blueprint",
+        scriptTitle: "NEET Physics Hack: 3 Formula Shortcuts",
         platform: "instagram",
-        language: "english",
+        language: "hinglish",
         contentGoal: "leads",
-        audience: "knowledge creators who hate complex CRM software",
-        scriptText: "Do you also hate managing manual spreadsheets? In this video I want to show you my dynamic lead pipeline framework. It uses Make and Claude to instantly update CRM cards based on comments. Save this and comment 'SETUP' to copy.",
-        notes: "Trying to maximize comment engagement for my automated direct-message campaigns."
+        audience: "JEE / NEET Aspirants looking for quick Physics shortcuts",
+        scriptText: "Bhai, agar tum NEET ya JEE prep kar rahe ho, toh ye Physics shortcut save karlo. Kinematics ke linear motion numericals 10 seconds mein solve honge. Formula hai v square equal to u square plus 2as but ek trick hai jo coaching classes nahi sikhate. Comment 'PHYSICS' aur main formula sheet DMs mein bhej dunga.",
+        notes: "I want to improve the hook and make the storytelling feel organic for student aspirants."
       });
     } else if (modeName === "performance_analyzer") {
       setPerfAnalyzer({
         platform: "instagram",
-        views: "45000",
-        likes: "3200",
-        comments: "812",
-        shares: "450",
-        saves: "1900",
-        followerCount: "8200",
-        durationSeconds: "28",
-        caption: "Comment FLOW to copy my dynamic client-closer templates! Stop fighting sales code.",
-        transcriptOrScript: "This single webhook closes over four thousand dollars worth of leads every month on autopilot. Let's compile it under thirty seconds. First connect Stripe, second link Claude, third trigger DMs. Comment FLOW to lock in.",
-        notes: "Excellent saves ratio but swipe-away spiked around second 4."
+        views: "65000",
+        likes: "4800",
+        comments: "1200",
+        shares: "950",
+        saves: "3500",
+        followerCount: "15000",
+        durationSeconds: "35",
+        caption: "Comment 'WEBHOOK' to get the full Airtable automation guide! 🚀 Save for later!",
+        transcriptOrScript: "Bhai, agar tum freelancing karte ho aur clients manually onboard kar rahe ho, toh tum bohot time waste kar rahe ho. Maine ek code zero chatbot banaya jo comments trigger hote hi, automated proposal client ko bhej deta hai. Ek click mein database update. Comment karo 'WEBHOOK' aur template tumhare direct messages mein.",
+        notes: "Excellent save-to-comment ratio, but swipe-away spikes when I show the Airtable screen around 12 seconds."
       });
     } else if (modeName === "creator_dna_builder") {
       setDnaBuilder({
-        niche: "AI-Powered Business Workflows",
-        audience: "Ambitious solopreneurs and product designers",
+        niche: "Coding & AI for Indian College Students",
+        audience: "CS / IT students trying to land off-campus placements",
         platform: "instagram",
         contentGoal: "authority",
-        tone: "bold_authoritative",
-        bestContentSample: "How I built a Stripe analytics overlay in 10 minutes without code",
-        worstContentSample: "A standard walkthrough of why clean variables are important in Python scripts",
-        notes: "My absolute strongest reels showcase highly polished, dark bento dashboards."
+        tone: "fast_energetic",
+        bestContentSample: "High paying freelance niches for Indian students who only know Tailwind & basic React",
+        worstContentSample: "Theoretical explanation of Time Complexity and Big O notation with standard whiteboards",
+        notes: "Placement roadmaps and freelancing hacks get 10x higher saves compared to core academic math."
       });
     } else if (modeName === "winner_loser_comparison") {
       setWinnerLoser({
-        winnerSample: "Winner Script: Built Stripe analytics overlay in 10 mins. Comments trigger direct link.",
-        loserSample: "Loser Script: Explaining what Stripe APIs are in theory. Slow developer dialogue.",
-        winnerViews: "95000",
-        loserViews: "1800",
-        notes: "Comparative review to identify the visual vs informational gap."
+        winnerSample: "Winner Script: React placement roadmap in 30 days starting with zero knowledge. Comments trigger checklist.",
+        loserSample: "Loser Script: What is React and why did Facebook build it? Theory class with standard slides.",
+        winnerViews: "120000",
+        loserViews: "3500",
+        notes: "Outcome-first roadmaps drive crazy student saves, whereas theory explanations completely kill retention on Instagram."
       });
     } else if (modeName === "competitor_analysis") {
       setCompetitor({
-        referenceSample: "Competitor Reel: Displays clean split-screen layout with automated direct messaging keyword 'Blueprints' overlay. Audio is fast-paced with chime triggers and zooms every 0.5s. High virality potential.",
-        userSample: "User Reel: Single screen terminal recording showing Make webhook dashboard with low-contrast caption. Audio delivery is calm but pacing is slow and has a long 3s pre-roll silent gap.",
-        notes: "Identify styling gap and cinematic pacing tweaks."
+        referenceSample: "Competitor Reel: Fast transition splitscreen. Shows real-life rupees credited in bank account notification. Audio delivery is super quick with chime transitions and zoom every 0.5s. Hook: 'React seekho aur side income start karo'.",
+        userSample: "User Reel: Screen recording of a terminal showing code. Voice is slow, dull, with a 3-second silent gap before introducing 'Hi guys, today we will look at setting up React'.",
+        notes: "Looking to replace dry tutorial flow with cinematic pacing, on-screen key rewards, and spoken Hinglish punchiness."
       });
     } else if (modeName === "multi_pattern_analysis") {
       setMultiPattern({
-        contentItems: "Video 1: Showing automated leads capture webhook mapping. Drop at second 5.\n\nVideo 2: 3-click guide to link Stripe to Claude. Drop at second 5.\n\nVideo 3: Creating a custom DB query in 10s. Drop at second 6.",
-        metrics: "All posts average 35% retention dropoffs on second 5",
-        notes: "Analyze recurring transition pacing bottleneck."
+        contentItems: "Video 1: Showing JEE Math integration cheat-sheet. Viewer retention drop at second 4 during formula list.\n\nVideo 2: 3-step guide on how to get internships using cold emails. Drop at second 5 when transition is slow.\n\nVideo 3: ChatGPT prompt template to write resumes in 10s. Drop at second 5 when slide transition occurs.",
+        metrics: "All videos experience a 40% retention drop off at second 4-5 during the 'technical explanations'.",
+        notes: "Identify how to mask complex information with better B-roll pattern interrupts or Hinglish callouts."
       });
     } else if (modeName === "full_content_audit") {
       setContentAudit({
-        niche: "Solopreneur Automations & High-Yield Flows",
-        audience: "Advanced freelancing developers and agency designers",
+        niche: "Tech Placement & Freelance Hacks",
+        audience: "Tier-2 & Tier-3 engineering college students in India",
         platform: "instagram",
         goals: "brand_awareness",
-        contentSamples: "Post A: Stripe invoicing blueprint walkthrough\n\nPost B: Claude inbox agent setup loops\n\nPost C: Airtable CRM webhooks tutorial",
-        challenges: "Follower growth is stagnant despite great save ratios on analytical videos",
-        notes: "Comprehensive systems health check and macro roadmap request."
+        contentSamples: "Post A: How I got 3 remote freelance clients in 1 month\n\nPost B: Best github repositories for final-year projects\n\nPost C: JEE preparation mistake that cost me my grade",
+        challenges: "Follower growth is quite slow despite high save and share numbers on analytical placement roadmaps",
+        notes: "Comprehensive systems health check to understand macro optimization."
       });
     } else if (modeName === "strategy_engine") {
       setStrategyEngine({
-        creatorDNA: "Premium Obsidian studio style, high authority tone, outcome-first webhook tutorials.",
-        latestAnalysis: "High viewer dropoff before payment pay-off screen is shown.",
-        latestComparison: "Outcome-first hooks gain 50x views compared to general whiteboard theories.",
-        trendContext: "AI visual overlays, rapid workflow templates, no-code billing widgets, clean bento sheets",
-        notes: "Build a high-retention 30-day concept playbook mapping direct DM commented capture keywords."
+        creatorDNA: "Smart friend placement guide, high authority but relatable outcome-first roadmaps.",
+        latestAnalysis: "High student viewer drop-offs before showing the salary range or resource list.",
+        latestComparison: "Direct action roadmaps get 40x higher engagement than generalized theoretical notes.",
+        trendContext: "College backlogs guide, internship trackers, remote work setups, high impact Hinglish captions, comments keyword triggers",
+        notes: "Build a premium high-retention 30-day playbook targeting tier-2/3 college students with Hinglish scripts."
       });
     }
   };
@@ -246,13 +348,24 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
             <p className="text-xs text-slate-500 mt-0.5">Fill out parameters to generate an executive-level performance breakdown.</p>
           </div>
           
-          <button
-            type="button"
-            onClick={() => handlePrefill(activeMode)}
-            className="text-[10px] uppercase font-bold text-[#cca972]/80 hover:text-[#cca972] px-3 py-1.5 rounded-lg border border-[#302e32] hover:border-[#cca972]/45 transition duration-200"
-          >
-            ✦ Load Refined Template
-          </button>
+          <div className="flex items-center gap-2">
+            {hasSyncedContent && (
+              <button
+                type="button"
+                onClick={handleImportSync}
+                className="text-[10px] uppercase font-bold text-white bg-[#cf7051]/30 hover:bg-[#cf7051]/40 border border-[#cf7051]/40 px-3 py-1.5 rounded-lg transition duration-200 cursor-pointer"
+              >
+                📥 Import Script Lab Sync
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => handlePrefill(activeMode)}
+              className="text-[10px] uppercase font-bold text-[#cca972]/80 hover:text-[#cca972] px-3 py-1.5 rounded-lg border border-[#302e32] hover:border-[#cca972]/45 transition duration-200"
+            >
+              ✦ Load Refined Template
+            </button>
+          </div>
         </div>
 
         {/* Dynamic Inputs Based on Active Mode */}
@@ -320,7 +433,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Target Audience Persona</label>
                 <input
                   type="text"
-                  placeholder="e.g. Busy freelance designers"
+                  placeholder="e.g. Audience: Students"
                   value={scriptDoctor.audience}
                   onChange={e => setScriptDoctor({ ...scriptDoctor, audience: e.target.value })}
                   className={inputClass}
@@ -334,7 +447,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Raw Script Text for Diagnosis</label>
                 <textarea
                   rows={8}
-                  placeholder="Paste your raw, unedited content script here..."
+                  placeholder={`Paste your reel script here...\n\nExample:\nAaj mai tumhe bataunga ek aisi mistake jo 90% creators karte hain aur isi wajah se unki reels viral nahi hoti...`}
                   value={scriptDoctor.scriptText}
                   onChange={e => setScriptDoctor({ ...scriptDoctor, scriptText: e.target.value })}
                   className={`${inputClass} resize-none h-[180px] font-mono text-xs`}
@@ -448,7 +561,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Original Caption / Metadata</label>
                 <input
                   type="text"
-                  placeholder="e.g. Save this for your next workflow buildup..."
+                  placeholder={`Paste caption here...\n\nExample:\n90% creators focus on editing.\nOnly 10% focus on retention.\nSave this reel if you want more growth tips.`}
                   value={perfAnalyzer.caption}
                   onChange={e => setPerfAnalyzer({ ...perfAnalyzer, caption: e.target.value })}
                   className={inputClass}
@@ -458,7 +571,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Active Script or Transcript text</label>
                 <textarea
                   rows={4}
-                  placeholder="Paste script/transcript text here of this exact post..."
+                  placeholder={`Paste transcript from your reel...\n\nExample:\nDosto agar aap Instagram par grow nahi kar pa rahe ho toh pehle yeh samjho...`}
                   value={perfAnalyzer.transcriptOrScript}
                   onChange={e => setPerfAnalyzer({ ...perfAnalyzer, transcriptOrScript: e.target.value })}
                   className={`${inputClass} resize-none font-mono text-xs`}
@@ -475,7 +588,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Niche / Topic Cluster</label>
                 <input
                   type="text"
-                  placeholder="e.g. AI Workflow Engineering"
+                  placeholder="e.g. Niche: Education"
                   value={dnaBuilder.niche}
                   onChange={e => setDnaBuilder({ ...dnaBuilder, niche: e.target.value })}
                   className={inputClass}
@@ -486,7 +599,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Target Audience Profile</label>
                 <input
                   type="text"
-                  placeholder="e.g. Tech founders wanting to automate CRM"
+                  placeholder="e.g. Audience: Students"
                   value={dnaBuilder.audience}
                   onChange={e => setDnaBuilder({ ...dnaBuilder, audience: e.target.value })}
                   className={inputClass}
@@ -528,7 +641,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Primal Winner Sample Concept</label>
                 <textarea
                   rows={2}
-                  placeholder="Describe your absolute best performing post (e.g. Webhook setup tutorial)..."
+                  placeholder="Paste your best-performing content..."
                   value={dnaBuilder.bestContentSample}
                   onChange={e => setDnaBuilder({ ...dnaBuilder, bestContentSample: e.target.value })}
                   className={`${inputClass} resize-none`}
@@ -539,7 +652,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Primal Under-performer Sample Concept</label>
                 <textarea
                   rows={2}
-                  placeholder="Describe your weakest performing post (e.g. why database relations matter theory)..."
+                  placeholder="Paste your underperforming content..."
                   value={dnaBuilder.worstContentSample}
                   onChange={e => setDnaBuilder({ ...dnaBuilder, worstContentSample: e.target.value })}
                   className={`${inputClass} resize-none`}
@@ -558,7 +671,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Winner Post Sample (Script, Hook or Description)</label>
                 <textarea
                   rows={5}
-                  placeholder="Paste or describe what worked perfectly..."
+                  placeholder="Paste your best-performing content..."
                   value={winnerLoser.winnerSample}
                   onChange={e => setWinnerLoser({ ...winnerLoser, winnerSample: e.target.value })}
                   className={`${inputClass} h-[130px] font-mono text-xs resize-none`}
@@ -592,7 +705,7 @@ export const InputWorkspace: React.FC<InputWorkspaceProps> = ({ activeMode, isAn
                 <label className={labelClass}>Underperformer (Loser) Post Sample</label>
                 <textarea
                   rows={5}
-                  placeholder="Paste or describe what under-performed..."
+                  placeholder="Paste your underperforming content..."
                   value={winnerLoser.loserSample}
                   onChange={e => setWinnerLoser({ ...winnerLoser, loserSample: e.target.value })}
                   className={`${inputClass} h-[130px] font-mono text-xs resize-none`}

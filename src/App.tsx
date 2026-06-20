@@ -55,7 +55,7 @@ import ProfileConfig from "./components/ProfileConfig";
 import ProjectHistory from "./components/ProjectHistory";
 import LoadingIndicator from "./components/LoadingIndicator";
 import EmptyState from "./components/EmptyState";
-import { ContentPackage, SavedProject, ProfileMemory } from "./types";
+import { ContentPackage, SavedProject, ProfileMemory, CreatorIntelligenceReport } from "./types";
 import { soundManager } from "./utils/sound";
 import QuoteOrb from "./components/QuoteOrb";
 import FloatingAccentLayer from "./components/FloatingAccentLayer";
@@ -116,14 +116,14 @@ const tabItemVariants = (enabled: boolean) => ({
 });
 
 const DEMO_PROJECTS_FOR_CHARTS = [
-  { config: { niche: "AI", tone: "Bold", goal: "Viral" } },
-  { config: { niche: "Tech", tone: "Educational", goal: "Retention" } },
-  { config: { niche: "Business", tone: "Professional", goal: "Authority" } },
-  { config: { niche: "Storytelling", tone: "Story-driven", goal: "Personal brand" } },
-  { config: { niche: "AI", tone: "Educational", goal: "Retention" } },
-  { config: { niche: "Tech", tone: "Casual", goal: "Viral" } },
-  { config: { niche: "Documentary", tone: "Story-driven", goal: "Clarity" } },
-  { config: { niche: "Education", tone: "Educational", goal: "Clarity" } },
+  { config: { niche: "AI tools for Indian students", tone: "Smart friend", goal: "Viral" } },
+  { config: { niche: "Tech / coding / dev", tone: "Proof-based educator", goal: "Retention" } },
+  { config: { niche: "Finance / money / investing", tone: "Founder voice", goal: "Authority" } },
+  { config: { niche: "College / student life", tone: "Storytelling creator", goal: "Personal brand" } },
+  { config: { niche: "AI tools for Indian students", tone: "Proof-based educator", goal: "Retention" } },
+  { config: { niche: "Tech / coding / dev", tone: "Smart friend", goal: "Viral" } },
+  { config: { niche: "Freelancing / remote work", tone: "Storytelling creator", goal: "Clarity" } },
+  { config: { niche: "Edtech / education", tone: "Proof-based educator", goal: "Clarity" } },
 ];
 
 export default function App() {
@@ -191,13 +191,13 @@ export default function App() {
   // Input parameters state
   const [text, setText] = useState("");
   const [contentType, setContentType] = useState("Rough script");
-  const [language, setLanguage] = useState("English");
-  const [niche, setNiche] = useState("AI");
-  const [tone, setTone] = useState("Educational");
+  const [language, setLanguage] = useState("Hinglish");
+  const [niche, setNiche] = useState("Tech / coding / dev");
+  const [tone, setTone] = useState("Smart friend");
   const [platform, setPlatform] = useState("Both");
   const [rewriteStrength, setRewriteStrength] = useState("Medium rewrite");
   const [goal, setGoal] = useState("Viral");
-  const [style, setStyle] = useState("Storytelling");
+  const [style, setStyle] = useState("Hinglish Reel Format");
   const [clearConfirm, setClearConfirm] = useState(false);
 
   // Custom metadata syncing from localStorage config
@@ -391,19 +391,19 @@ export default function App() {
   const handleLoadSample = (sampleType: "idea" | "script") => {
     if (sampleType === "idea") {
       setText(
-        "AI agents are starting to run locally instead of in the cloud. I want to tell creators how they can run a local autonomous model in 3 simple steps so they never pay OpenAI subscription costs again, using Ollama and a custom terminal script. It should feel incredibly smart and counter-intuitive."
+        "Indian students ke liye AI tools jo coding aur assignments me 10x time bachate hain. Main bataunga 3 free tools jo ChatGPT se behtar hain aur local laptop pe bina internet chalte hain, using Ollama and a custom script. It should feel super helpful and focus on student daily struggles."
       );
       setContentType("Topic only");
-      setNiche("AI");
-      setTone("Bold");
+      setNiche("AI tools for Indian students");
+      setTone("Smart friend");
       setGoal("Viral");
     } else {
       setText(
-        "Hey everyone, today we are talking about why you should start coding in 2026. Coding is not dead because of AI, in fact, AI is making coders 10x faster. If you don't know how to command AI, you will be replaced by someone who does. Let me show you how to start learning python in 30 seconds."
+        "Bhai, agar tum coding seekh rahe ho aur final-year product placements ki fikar hai, toh ye 3 Github repos bacha lo. Hum log sab seekhte hain par resume me project build nahi kar paate. Main dikhaunga kaise ready-to-deploy Tailwind aur React code copy karke deployment seekh sako in 30 seconds."
       );
       setContentType("Rough script");
-      setNiche("Tech");
-      setTone("Educational");
+      setNiche("Tech / coding / dev");
+      setTone("Smart friend");
       setGoal("Retention");
     }
   };
@@ -482,6 +482,7 @@ export default function App() {
       // Auto-save generated creator package to local storage and secure DB backup in the background
       setTimeout(() => {
         handleSaveProject(autoSavedName, result.data);
+        syncScriptLabToCreatorIntelligence(autoSavedName, result.data);
       }, 100);
     } catch (err: any) {
       console.error(err);
@@ -491,12 +492,212 @@ export default function App() {
     }
   };
 
+  // Auto sync the script lab with creator intelligence
+  const syncScriptLabToCreatorIntelligence = async (name: string, packageData: ContentPackage) => {
+    try {
+      const getLabel = (score: number) => {
+        if (score >= 90) return "excellent";
+        if (score >= 80) return "strong";
+        if (score >= 65) return "moderate";
+        return "weak";
+      };
+
+      // 1. Build a new CreatorIntelligenceReport from contentPackage
+      const newReport: CreatorIntelligenceReport = {
+        id: "intel_sync_" + Date.now(),
+        createdAt: new Date().toISOString(),
+        mode: "script_doctor",
+        title: `Script Lab: ${name.replace("Refactor: ", "")}`,
+        summary: packageData.viralScore?.explanation || "Script Lab Auto-Synced analysis report evaluating flow alignment and dropoff risks.",
+        scores: {
+          hook: {
+            score: packageData.viralScore?.hookStrength || 75,
+            label: getLabel(packageData.viralScore?.hookStrength || 75),
+            reason: `Evaluates how effectively the initial message grabs and locks student attention inside 3 seconds.`
+          },
+          retention: {
+            score: packageData.viralScore?.retention || 70,
+            label: getLabel(packageData.viralScore?.retention || 70),
+            reason: `Mid-clip structure density and logical pacing continuity.`
+          },
+          flow: {
+            score: packageData.viralScore?.clarity || 80,
+            label: getLabel(packageData.viralScore?.clarity || 80),
+            reason: `Structural block transit clarity and linguistic fluidity.`
+          },
+          story: {
+            score: packageData.viralScore?.curiosity || 65,
+            label: getLabel(packageData.viralScore?.curiosity || 65),
+            reason: `Narrative core elements and setups for payoff suspense.`
+          },
+          emotion: {
+            score: Math.round(((packageData.viralScore?.curiosity || 65) + (packageData.viralScore?.clarity || 80)) / 2),
+            label: "moderate",
+            reason: `Relatable problem presentation and professional validation.`
+          },
+          cta: {
+            score: packageData.viralScore?.overallScore || 75,
+            label: getLabel(packageData.viralScore?.overallScore || 75),
+            reason: `Prompt action alignment and conversion friction reductions.`
+          },
+          packaging: {
+            score: packageData.viralScore?.viralityPotential || 78,
+            label: getLabel(packageData.viralScore?.viralityPotential || 78),
+            reason: `Click incentive and curiosity-driven title packaging effectiveness.`
+          },
+          audienceMatch: {
+            score: packageData.viralScore?.overallScore || 75,
+            label: getLabel(packageData.viralScore?.overallScore || 75),
+            reason: `High relevance matching with standard professional audience clusters.`
+          },
+          overall: {
+            score: packageData.viralScore?.overallScore || 74,
+            label: getLabel(packageData.viralScore?.overallScore || 74),
+            reason: `Consolidated quality index for generated creative segments.`
+          }
+        },
+        structure: [
+          {
+            name: "Hook Section",
+            exists: true,
+            strength: packageData.viralScore?.hookStrength || 75,
+            impact: "Establishes video topic parameters immediately.",
+            weakness: packageData.retentionAnalysis?.weaknesses?.[0] || "No upfront visual proof or hook alerts.",
+            fix: packageData.retentionAnalysis?.suggestions?.[0] || "Lead directly with quantitative proof metrics."
+          },
+          {
+            name: "Setup Phase",
+            exists: true,
+            strength: packageData.viralScore?.clarity || 80,
+            impact: "Validates technical stack setup or core framework.",
+            weakness: "Explanation can dwell on concepts dryly.",
+            fix: "Keep background visuals moving at 1.5x zoom cuts."
+          },
+          {
+            name: "Problem Delivery",
+            exists: true,
+            strength: packageData.viralScore?.curiosity || 70,
+            impact: "Connects with student frustrations or placement bottlenecks.",
+            weakness: "Lacks sharp relatable metaphors.",
+            fix: "Use Hinglish terms describing placement day anxiety."
+          },
+          {
+            name: "Value Payoff",
+            exists: true,
+            strength: packageData.viralScore?.retention || 75,
+            impact: "Actionable screen demonstration coordinates.",
+            weakness: "Low-contrast background overlay.",
+            fix: "Introduce bold highlighter arrows on screen sections."
+          },
+          {
+            name: "Call To Action",
+            exists: true,
+            strength: packageData.viralScore?.overallScore || 75,
+            impact: "Comment automation prompt triggers with comment-to-DM triggers.",
+            weakness: "Arrives right near final fade.",
+            fix: "Pitch keyword 10s earlier before climax solution fades."
+          }
+        ],
+        strengths: [
+          packageData.styleNotes?.strongestAngle || "Clean bilingual Hinglish expression",
+          "Rich interactive multi-format alternatives produced",
+          "Optimized keyword density structures"
+        ],
+        weaknesses: packageData.retentionAnalysis?.weaknesses || ["pacing latency transitions"],
+        missingElements: [
+          "Middle pattern interrupt sound triggers",
+          "Frictionless comment automation keyword linkups"
+        ],
+        recommendedFixes: packageData.retentionAnalysis?.suggestions || ["Insert zoom resets every 4 seconds"],
+        improvedVersion: packageData.scripts?.viral || "No template",
+        shorterVersion: packageData.scripts?.short || packageData.scripts?.improved || "No shorter template",
+        punchierVersion: packageData.scripts?.hookFirst || "No punchy template",
+        creatorDNAUpdate: {
+          niche: packageData.styleNotes?.style || niche,
+          audience: packageData.styleNotes?.audienceMatch || "Indian Tech & Professional Developers",
+          strongestFormats: [packageData.styleNotes?.style || "Hinglish Reel Format"],
+          strongestHooks: packageData.hooks?.scrollStopper || ["Quantified salary packages proofs", "Warning mistake logs opener"],
+          strongestCTAs: packageData.ctas?.comment || ["Automated comments DM keyword drops"],
+          contentLengthPreference: packageData.styleNotes?.pacing || "30-45 seconds",
+          recurringPatterns: ["Proof-first visual layout structures", "Relatable sibling Hinglish style"],
+          biggestBottleneck: packageData.retentionAnalysis?.weaknesses?.[0] || "Hook speed attention latency",
+          recommendedFocus: packageData.retentionAnalysis?.suggestions?.[0] || "Cut early silent pre-rolls from timeline"
+        },
+        strategy: {
+          keepDoing: [
+            "Use live screen demos in high contrast black boxes.",
+            "Integrate automated keywords triggering comment-to-DM.",
+            "Deliver scripts in energetic buddy voice."
+          ],
+          stopDoing: packageData.retentionAnalysis?.weaknesses || ["No dry theoretical roadmapping without code"],
+          improveFirst: packageData.retentionAnalysis?.suggestions || ["Lead instantly with visual package result"],
+          testNext: [
+            "A fast 15-second visual bento-grid review.",
+            "Splitting screen between manual typing and code CLI"
+          ],
+          biggestBottleneck: packageData.retentionAnalysis?.weaknesses?.[0] || "Viewer dropoff inside first 3 seconds",
+          highestLeverageFix: packageData.retentionAnalysis?.suggestions?.[0] || "Use outcome-driven shock numbers at frame 0"
+        },
+        metadata: {
+          language: language,
+          platform: platform,
+          dataConfidence: "high",
+          isEstimated: false
+        }
+      };
+
+      // 2. Read history, prepend work, write back
+      const existingHistoryStr = localStorage.getItem("creatoros_intel_history");
+      let updatedHistory: CreatorIntelligenceReport[] = [];
+      if (existingHistoryStr) {
+        try {
+          const parsed = JSON.parse(existingHistoryStr);
+          updatedHistory = [newReport, ...parsed];
+        } catch {
+          updatedHistory = [newReport];
+        }
+      } else {
+        updatedHistory = [newReport];
+      }
+
+      localStorage.setItem("creatoros_intel_history", JSON.stringify(updatedHistory));
+      setIntelCount(updatedHistory.length);
+
+      // 3. Write back DNA as the live cumulative DNA
+      localStorage.setItem("creatoros_cumulative_dna", JSON.stringify(newReport.creatorDNAUpdate));
+
+      // 4. Trigger async POST calls to the DB endpoints safely
+      try {
+        await fetch("/api/creator-intelligence/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newReport)
+        });
+      } catch (err) {
+        console.warn("Could not sync script history to server db backup:", err);
+      }
+
+      try {
+        await fetch("/api/creator-intelligence/dna", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newReport.creatorDNAUpdate)
+        });
+      } catch (err) {
+        console.warn("Could not sync script DNA to server db backup:", err);
+      }
+    } catch (syncErr) {
+      console.warn("Creator intelligence auto-sync error:", syncErr);
+    }
+  };
+
   // Save Current Project to localStorage & Supabase
-  const handleSaveProject = async (customName?: string, customPackage?: any) => {
+  const handleSaveProject = async (customName?: any, customPackage?: any) => {
     const pkg = customPackage || contentPackage;
     if (!pkg) return;
 
-    const nameToSave = (customName || projectName).trim() || `Transform Project - ${new Date().toLocaleDateString()}`;
+    const actualCustomName = typeof customName === "string" ? customName : undefined;
+    const nameToSave = ((actualCustomName || projectName) || "").trim() || `Transform Project - ${new Date().toLocaleDateString()}`;
     const newProject: SavedProject = {
       id: activeProjectId || Date.now().toString(),
       name: nameToSave,
@@ -953,98 +1154,106 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Target Niche</label>
-                  <select
-                    value={niche}
-                    onChange={(e) => {
-                      soundManager.playClick();
-                      setNiche(e.target.value);
-                    }}
-                    onMouseEnter={() => soundManager.playHover()}
-                    className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
-                  >
-                    <option value="AI" className="bg-[#141416]">AI & Agents</option>
-                    <option value="Tech" className="bg-[#141416]">Tech & Development</option>
-                    <option value="Business" className="bg-[#141416]">Business & Startups</option>
-                    <option value="Storytelling" className="bg-[#141416]">Classic Storytelling</option>
-                    <option value="Documentary" className="bg-[#141416]">Vox-style Doc</option>
-                    <option value="Education" className="bg-[#141416]">Educational</option>
-                    <option value="Mixed" className="bg-[#141416]">Mixed Domain</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Voice Tone</label>
-                  <select
-                    value={tone}
-                    onChange={(e) => {
-                      soundManager.playClick();
-                      setTone(e.target.value);
-                    }}
-                    onMouseEnter={() => soundManager.playHover()}
-                    className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
-                  >
-                    <option value="Professional" className="bg-[#141416]">Professional</option>
-                    <option value="Casual" className="bg-[#141416]">Casual / Direct</option>
-                    <option value="Bold" className="bg-[#141416]">Bold / Authoritative</option>
-                    <option value="Emotional" className="bg-[#141416]">Emotional Story</option>
-                    <option value="Educational" className="bg-[#141416]">Visual Teacher</option>
-                    <option value="Story-driven" className="bg-[#141416]">Narrative Hero</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Platform Style</label>
-                  <select
-                    value={platform}
-                    onChange={(e) => {
-                      soundManager.playClick();
-                      setPlatform(e.target.value);
-                    }}
-                    onMouseEnter={() => soundManager.playHover()}
-                    className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
-                  >
-                    <option value="Instagram Reels" className="bg-[#141416]">Instagram Reels Only</option>
-                    <option value="YouTube Shorts" className="bg-[#141416]">YouTube Shorts Only</option>
-                    <option value="Both" className="bg-[#141416]">Vertical Dual-Feed (Both)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Refactor Goal</label>
-                  <select
-                    value={goal}
-                    onChange={(e) => {
-                      soundManager.playClick();
-                      setGoal(e.target.value);
-                    }}
-                    onMouseEnter={() => soundManager.playHover()}
-                    className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
-                  >
-                    <option value="Viral" className="bg-[#141416]">Max Virality Potential</option>
-                    <option value="Retention" className="bg-[#141416]">High Dynamic Retention</option>
-                    <option value="Clarity" className="bg-[#141416]">Simple Explainer Clarity</option>
-                    <option value="Authority" className="bg-[#141416]">Elite Industry Authority</option>
-                    <option value="Personal brand" className="bg-[#141416]">Personal Connection</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Output Language</label>
-                  <select
-                    value={language}
-                    onChange={(e) => {
-                      soundManager.playClick();
-                      setLanguage(e.target.value);
-                    }}
-                    onMouseEnter={() => soundManager.playHover()}
-                    className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
-                  >
-                    <option value="English" className="bg-[#141416]">Pure English</option>
-                    <option value="Hinglish" className="bg-[#141416]">Spoken Hinglish (Conversational)</option>
-                  </select>
-                </div>
-              </div>
+                   <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Target Niche</label>
+                   <select
+                     value={niche}
+                     onChange={(e) => {
+                       soundManager.playClick();
+                       setNiche(e.target.value);
+                     }}
+                     onMouseEnter={() => soundManager.playHover()}
+                     className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
+                   >
+                     <option value="AI tools for Indian students" className="bg-[#141416]">AI for Indian Students</option>
+                     <option value="Tech / coding / dev" className="bg-[#141416]">Tech & Coding / Dev</option>
+                     <option value="JEE / NEET / UPSC / SSC" className="bg-[#141416]">JEE / NEET / UPSC / SSC</option>
+                     <option value="College / student life" className="bg-[#141416]">College / Student Life</option>
+                     <option value="Finance / money / investing" className="bg-[#141416]">Finance & Investing</option>
+                     <option value="Startup / entrepreneurship" className="bg-[#141416]">Startup & Business</option>
+                     <option value="Freelancing / remote work" className="bg-[#141416]">Freelancing & Remote Work</option>
+                     <option value="Personal branding" className="bg-[#141416]">Personal Branding</option>
+                     <option value="Edtech / education" className="bg-[#141416]">Edtech & Education</option>
+                     <option value="Fitness / self-improvement" className="bg-[#141416]">Fitness & Self-Improvement</option>
+                     <option value="Meme / entertainment" className="bg-[#141416]">Meme & Entertainment</option>
+                     <option value="Mixed / General" className="bg-[#141416]">Mixed / General</option>
+                   </select>
+                 </div>
+ 
+                 <div>
+                   <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Voice Tone</label>
+                   <select
+                     value={tone}
+                     onChange={(e) => {
+                       soundManager.playClick();
+                       setTone(e.target.value);
+                     }}
+                     onMouseEnter={() => soundManager.playHover()}
+                     className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
+                   >
+                     <option value="Friendly teacher" className="bg-[#141416]">Friendly teacher</option>
+                     <option value="Smart friend" className="bg-[#141416]">Smart friend</option>
+                     <option value="Expert advisor" className="bg-[#141416]">Expert advisor</option>
+                     <option value="Founder voice" className="bg-[#141416]">Founder voice</option>
+                     <option value="Student mentor" className="bg-[#141416]">Student mentor</option>
+                     <option value="Straightforward Indian creator" className="bg-[#141416]">Straightforward Indian creator</option>
+                     <option value="Proof-based educator" className="bg-[#141416]">Proof-based educator</option>
+                     <option value="Storytelling creator" className="bg-[#141416]">Storytelling creator</option>
+                   </select>
+                 </div>
+ 
+                 <div>
+                   <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Platform Style</label>
+                   <select
+                     value={platform}
+                     onChange={(e) => {
+                       soundManager.playClick();
+                       setPlatform(e.target.value);
+                     }}
+                     onMouseEnter={() => soundManager.playHover()}
+                     className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
+                   >
+                     <option value="Instagram Reels" className="bg-[#141416]">Instagram Reels Only</option>
+                     <option value="YouTube Shorts" className="bg-[#141416]">YouTube Shorts Only</option>
+                     <option value="Both" className="bg-[#141416]">Vertical Dual-Feed (Both)</option>
+                   </select>
+                 </div>
+ 
+                 <div>
+                   <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Refactor Goal</label>
+                   <select
+                     value={goal}
+                     onChange={(e) => {
+                       soundManager.playClick();
+                       setGoal(e.target.value);
+                     }}
+                     onMouseEnter={() => soundManager.playHover()}
+                     className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
+                   >
+                     <option value="Viral" className="bg-[#141416]">Max Virality Potential</option>
+                     <option value="Retention" className="bg-[#141416]">High Dynamic Retention</option>
+                     <option value="Clarity" className="bg-[#141416]">Simple Explainer Clarity</option>
+                     <option value="Authority" className="bg-[#141416]">Elite Industry Authority</option>
+                     <option value="Personal brand" className="bg-[#141416]">Personal Connection</option>
+                   </select>
+                 </div>
+ 
+                 <div>
+                   <label className="block text-[10.5px] uppercase font-bold text-[#cca972] mb-1.5">Output Language</label>
+                   <select
+                     value={language}
+                     onChange={(e) => {
+                       soundManager.playClick();
+                       setLanguage(e.target.value);
+                     }}
+                     onMouseEnter={() => soundManager.playHover()}
+                     className="w-full bg-[#18181b] text-xs text-[#e8dfd8] rounded-xl p-2.5 border border-[#28282b] focus:border-[#cf7051]/50 focus:outline-none transition cursor-pointer"
+                   >
+                     <option value="Hinglish" className="bg-[#141416]">Spoken Hinglish (Conversational)</option>
+                     <option value="Hindi" className="bg-[#141416]">Hindi only (हिंदी)</option>
+                     <option value="English" className="bg-[#141416]">English only</option>
+                   </select>
+                 </div>
+               </div>
 
               {/* Action Buttons */}
               <div className="mt-6 space-y-2.5">

@@ -1,5 +1,5 @@
 import React from "react";
-import { History, ChevronRight, FileText, Download, Copy, Calendar, Sparkles } from "lucide-react";
+import { History, ChevronRight, FileText, Download, Copy, Calendar, Sparkles, Trash2 } from "lucide-react";
 import { CreatorIntelligenceReport } from "../../types";
 import { soundManager } from "../../utils/sound";
 
@@ -8,14 +8,18 @@ interface HistoryVaultProps {
   activeReportId?: string;
   onSelectReport: (report: CreatorIntelligenceReport) => void;
   onExportMarkdown: (report: CreatorIntelligenceReport) => void;
+  onDeleteReport: (id: string) => void;
 }
 
 export const HistoryVault: React.FC<HistoryVaultProps> = ({
   history = [],
   activeReportId,
   onSelectReport,
-  onExportMarkdown
+  onExportMarkdown,
+  onDeleteReport
 }) => {
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+
   if (history.length === 0) return null;
 
   return (
@@ -91,6 +95,47 @@ export const HistoryVault: React.FC<HistoryVaultProps> = ({
                   <Download className="w-3 h-3" />
                   <span>MD</span>
                 </button>
+
+                {deletingId === report.id ? (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        soundManager.playSparkle();
+                        onDeleteReport(report.id);
+                        setDeletingId(null);
+                      }}
+                      className="text-[10px] text-white bg-rose-600 hover:bg-rose-500 font-bold px-2 py-1 rounded cursor-pointer transition duration-150"
+                    >
+                      Delete
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        soundManager.playClick();
+                        setDeletingId(null);
+                      }}
+                      className="text-[10px] text-slate-400 bg-slate-800 hover:bg-slate-700 font-bold px-2 py-1 rounded cursor-pointer transition duration-150"
+                    >
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      soundManager.playClick();
+                      setDeletingId(report.id);
+                    }}
+                    className="flex items-center justify-center p-1.5 rounded text-rose-400 hover:text-rose-300 bg-rose-950/10 hover:bg-rose-950/35 border border-rose-900/30 hover:border-rose-900/50 transition duration-200 cursor-pointer"
+                    title="Delete this report"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 
                 <button
                   type="button"
