@@ -1,6 +1,6 @@
 {
-  "name": "CreatorOS Personal",
-  "description": "Premium multi-mode Creator Intelligence diagnostic lab and AI content strategy sandbox.",
+  "name": "CreatorOS AI",
+  "description": "Premium, India-first Creator Intelligence Operating System and daily creative companion workspace for Indian creators.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
