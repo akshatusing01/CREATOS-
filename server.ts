@@ -171,9 +171,21 @@ async function resilientGenerateContent(params: {
         const errMsg = err?.message || String(err);
         const status = err?.status || err?.code || 500;
         
-        console.warn(`[Gemini API Warning] Model ${model} failed on attempt ${i + 1} with error (status: ${status}):`, errMsg);
+        console.log(`[Gemini API Info] Model ${model} returned busy/unavailable on attempt ${i + 1} (status: ${status})`);
 
-        // Standard 503, 429, or general socket disconnect errors should be retried or fallback triggered
+        const isOverloaded = status === 503 || status === 429 || 
+                             errMsg.includes("503") || 
+                             errMsg.includes("UNAVAILABLE") || 
+                             errMsg.includes("high demand") || 
+                             errMsg.includes("Resource exhausted") || 
+                             errMsg.includes("429");
+
+        if (isOverloaded) {
+          console.log(`[Gemini API Fallback] Shifting away from ${model} due to temp high-demand (status: ${status}). Retrying with next model in chain.`);
+          break; // Break the attempts loop to immediately try the next model
+        }
+
+        // Standard minor socket disconnect errors or other transient errors should be retried
         if (i < attempts - 1) {
           await new Promise(resolve => setTimeout(resolve, delay));
           delay *= 1.5;
@@ -1035,13 +1047,15 @@ Make the new version 100% better, punchier, and fully realized matching India-Fi
           .limit(1);
 
         if (error) {
-          console.log("Supabase connection probe notice:", error.message || error);
-          const errMsg = error.message || "";
-          if (error.code === "PGRST116" || error.code === "42P01" || errMsg.includes("does not exist") || status === 404) {
+          const errMsg = error.message || String(error);
+          const isFetchFailed = errMsg.includes("fetch") || errMsg.includes("TypeError") || errMsg.includes("UNAVAILABLE") || errMsg.includes("failed");
+          console.log("Supabase connection status:", isFetchFailed ? "Offline fallback active" : `Notice: ${errMsg}`);
+          const errMsgClean = isFetchFailed ? "Database offline or unreachable" : errMsg;
+          if (error.code === "PGRST116" || error.code === "42P01" || errMsgClean.includes("does not exist") || status === 404) {
             isReachable = true; // Reachable, but table hasn't been created yet
             detail = "TABLE_NOT_FOUND";
           } else {
-            detail = `API_NOTICE: ${errMsg}`;
+            detail = `API_NOTICE: ${errMsgClean}`;
           }
         } else {
           isReachable = true;
@@ -1049,8 +1063,10 @@ Make the new version 100% better, punchier, and fully realized matching India-Fi
           count = data ? data.length : 0;
         }
       } catch (err: any) {
-        console.log("Supabase validation exception notice:", err.message || err);
-        detail = `EXCEPTION_NOTICE: ${err.message || err}`;
+        const errMsg = err.message || String(err);
+        const isFetchFailed = errMsg.includes("fetch") || errMsg.includes("TypeError") || errMsg.includes("UNAVAILABLE") || errMsg.includes("failed");
+        console.log("Supabase validation status:", isFetchFailed ? "Offline fallback active" : errMsg);
+        detail = `EXCEPTION_NOTICE: ${isFetchFailed ? "Database offline or unreachable" : errMsg}`;
       }
     }
 
@@ -1361,7 +1377,7 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, source: "supabase", data });
     } catch (err: any) {
-      console.log("Supabase GET status fallback info:", err?.message || err);
+      console.log("Supabase GET projects: utilizing local offline fallback");
       return res.json({ success: true, source: "localStorage", data: [] });
     }
   });
@@ -1396,8 +1412,8 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, message: "Project successfully saved to Supabase." });
     } catch (err: any) {
-      console.log("Supabase POST status fallback info:", err?.message || err);
-      return res.status(500).json({ success: false, error: err.message || "Failed to save project to Supabase." });
+      console.log("Supabase POST project: utilizing local offline fallback");
+      return res.status(500).json({ success: false, error: "Failed to save project to Supabase." });
     }
   });
 
@@ -1425,8 +1441,8 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, message: "Project deleted from Supabase." });
     } catch (err: any) {
-      console.log("Supabase DELETE status info:", err?.message || err);
-      return res.status(500).json({ success: false, error: err.message || "Failed to delete project from Supabase." });
+      console.log("Supabase DELETE project: utilizing local offline fallback");
+      return res.status(500).json({ success: false, error: "Failed to delete project from Supabase." });
     }
   });
 
@@ -1454,7 +1470,7 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, source: "supabase", data });
     } catch (err: any) {
-      console.log("Supabase DNA active loader status: utilizing offline fallback:", err?.message || err);
+      console.log("Supabase DNA active loader status: utilizing local offline fallback");
       return res.json({ success: true, source: "localStorage", data: null });
     }
   });
@@ -1484,8 +1500,8 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, message: "Creator DNA synced to Supabase." });
     } catch (err: any) {
-      console.log("Supabase DNA update status notice:", err?.message || err);
-      return res.status(500).json({ success: false, error: err.message || "Failed to save Creator DNA to Supabase." });
+      console.log("Supabase DNA update status: utilizing local offline fallback");
+      return res.status(500).json({ success: false, error: "Failed to save Creator DNA to Supabase." });
     }
   });
 
@@ -1512,7 +1528,7 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, source: "supabase", data });
     } catch (err: any) {
-      console.log("Supabase history active loader status: utilizing offline fallback:", err?.message || err);
+      console.log("Supabase history active loader status: utilizing local offline fallback");
       return res.json({ success: true, source: "localStorage", data: [] });
     }
   });
@@ -1559,8 +1575,8 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, message: "Report successfully saved to Supabase analysis_history." });
     } catch (err: any) {
-      console.log("Supabase POST history update info:", err?.message || err);
-      return res.status(500).json({ success: false, error: err.message || "Failed to save history report to Supabase." });
+      console.log("Supabase POST history update status: utilizing local offline fallback");
+      return res.status(500).json({ success: false, error: "Failed to save history report to Supabase." });
     }
   });
 
@@ -1588,8 +1604,8 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, message: "Report deleted from Supabase analysis_history." });
     } catch (err: any) {
-      console.log("Supabase DELETE history notice:", err?.message || err);
-      return res.status(500).json({ success: false, error: err.message || "Failed to delete report from Supabase." });
+      console.log("Supabase DELETE history status: utilizing local offline fallback");
+      return res.status(500).json({ success: false, error: "Failed to delete report from Supabase." });
     }
   });
 
@@ -1616,8 +1632,8 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, message: "All databases and creator intelligence records cleared successfully." });
     } catch (err: any) {
-      console.log("Supabase reset database notice:", err?.message || err);
-      return res.json({ success: true, warning: "Local data cleared, remote database sync bypass.", error: err.message });
+      console.log("Supabase reset database status: utilizing local offline fallback");
+      return res.json({ success: true, warning: "Local data cleared, remote database sync bypass." });
     }
   });
 
@@ -1670,7 +1686,7 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, source: "supabase", data });
     } catch (err: any) {
-      console.log(`Supabase GET profile table matching ${req.params.table} fallback active. Info:`, err?.message || err);
+      console.log(`Supabase GET profile table matching ${req.params.table} fallback active`);
       return res.json({ success: true, source: "localStorage", data: null });
     }
   });
@@ -1724,8 +1740,8 @@ CREATE POLICY "Allow public upsert season" ON season_reports FOR INSERT WITH CHE
 
       return res.json({ success: true, message: `Profile synchronized to table ${table}.` });
     } catch (err: any) {
-      console.log(`Supabase POST profile update table matching ${req.params.table} status info:`, err?.message || err);
-      return res.status(500).json({ success: false, error: err.message || "Failed to save profile." });
+      console.log(`Supabase POST profile update table matching ${req.params.table} fallback active`);
+      return res.status(500).json({ success: false, error: "Failed to save profile." });
     }
   });
   

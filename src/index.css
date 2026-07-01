@@ -7,174 +7,208 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
-/* Custom scrollbars for clean Creator Command Center */
+/* Base style resets for the Warm Premium Editorial palette */
+html, body {
+  background-color: #faf8f5 !important;
+  color: #1a1613 !important;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Custom scrollbars for clean Creator Workspace */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(17, 24, 39, 0.4);
+  background: #f4f0e6;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(184, 76, 47, 0.2);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.4);
+  background: rgba(184, 76, 47, 0.4);
 }
 
-/* Beautiful smooth theme-switching transitions for containers, inputs, buttons, and text */
+/* Global transitions */
+* {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Global Overrides mapping dark classes directly to the Warm Ivory premium palette */
 #creatoros-app-root,
-#creatoros-app-root header,
-#creatoros-app-root select,
-#creatoros-app-root input,
-#creatoros-app-root textarea,
-#creatoros-app-root button,
-#creatoros-app-root div,
-#creatoros-app-root p,
-#creatoros-app-root span,
-#creatoros-app-root a {
-  transition: background-color 0.45s cubic-bezier(0.4, 0, 0.2, 1), 
-              color 0.45s cubic-bezier(0.4, 0, 0.2, 1), 
-              border-color 0.45s cubic-bezier(0.4, 0, 0.2, 1), 
-              box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* High Contrast Light Mode Stylesheet */
-.theme-light {
-  background-color: #f7f5f1 !important;
+.bg-\[\#0c0c0e\],
+.bg-\[\#070608\] {
+  background-color: #faf8f5 !important;
   color: #1a1613 !important;
 }
 
-.theme-light ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-}
-.theme-light ::-webkit-scrollbar-thumb {
-  background: rgba(184, 76, 47, 0.15);
-}
-.theme-light ::-webkit-scrollbar-thumb:hover {
-  background: rgba(184, 76, 47, 0.3);
-}
-
-/* Structural cards and panels */
-.theme-light .bg-\[\#141416\]\/95,
-.theme-light .bg-\[\#141416\],
-.theme-light .bg-white\/5 {
+/* Premium Surface cards - Pure White with Soft Shadow */
+.bg-\[\#141416\]\/95,
+.bg-\[\#141416\],
+.bg-\[\#0c0b0e\],
+.bg-white\/5 {
   background-color: #ffffff !important;
   border-color: #e3ded6 !important;
   color: #1a1613 !important;
-  box-shadow: 0 10px 30px -10px rgba(26, 22, 19, 0.06), 0 1px 3px rgba(26, 22, 19, 0.02) !important;
+  box-shadow: 0 4px 20px -2px rgba(26, 22, 19, 0.04), 0 1px 3px rgba(26, 22, 19, 0.02) !important;
 }
 
-/* Background floating canvas adjustments */
-.theme-light .bg-\[\#0c0c0e\] {
-  background-color: #f7f5f1 !important;
+/* Secondary Surface - Soft Sand */
+.bg-\[\#202022\],
+.bg-\[\#202022\]\/80,
+.bg-\[\#18181b\],
+.bg-\[\#222224\],
+.bg-white\/2 {
+  background-color: #f4f0e6 !important;
+  border-color: #e3ded6 !important;
+  color: #2c2520 !important;
 }
 
-/* Form inputs, Select boxes & Textareas */
-.theme-light select,
-.theme-light input,
-.theme-light textarea {
-  background-color: #fcfbfa !important;
+/* Hovers on Secondary Surfaces */
+.hover\:bg-\[\#2c2c2f\]:hover,
+.hover\:bg-\[\#28282a\]:hover,
+.hover\:bg-\[\#2e2e32\]:hover {
+  background-color: #eae5db !important;
+  color: #1a1613 !important;
+}
+
+/* Border styles */
+.border-\[\#232225\],
+.border-\[\#2e2c2a\],
+.border-\[\#28282b\],
+.border-\[\#2e2a28\],
+.border-\[\#1c1b1e\] {
+  border-color: #e3ded6 !important;
+}
+
+/* Focus and input states */
+select, input, textarea {
+  background-color: #ffffff !important;
   color: #1a1613 !important;
   border-color: #e3ded6 !important;
-  outline: none !important;
+  border-radius: 12px !important;
 }
 
-.theme-light select:focus,
-.theme-light input:focus,
-.theme-light textarea:focus {
+select:focus, input:focus, textarea:focus {
   border-color: #b84c2f !important;
-  box-shadow: 0 0 0 2px rgba(184, 76, 47, 0.1) !important;
+  box-shadow: 0 0 0 2px rgba(184, 76, 47, 0.08) !important;
 }
 
-.theme-light input::placeholder,
-.theme-light textarea::placeholder {
+::placeholder {
   color: #8c8276 !important;
+  opacity: 0.7 !important;
 }
 
-/* Options within dark select dropdowns (safeguarding system select rendering) */
-.theme-light option {
-  background-color: #ffffff !important;
-  color: #1a1613 !important;
+/* Accent: Copper */
+.text-\[\#cf7051\],
+.text-rose-400 {
+  color: #b84c2f !important;
 }
 
-/* Specific button and utility overrides */
-.theme-light .bg-\[\#202022\],
-.theme-light .bg-\[\#202022\]\/80 {
-  background-color: #ebe7e0 !important;
-  border-color: #d8d3c9 !important;
-  color: #4a423b !important;
-}
-
-.theme-light .hover\:bg-\[\#2c2c2f\]:hover,
-.theme-light .hover\:bg-\[\#28282a\]:hover {
-  background-color: #ded9cf !important;
-  color: #1a1613 !important;
-}
-
-/* Primary/Action buttons */
-.theme-light .bg-\[\#cf7051\] {
+.bg-\[\#cf7051\],
+.bg-gradient-to-r.from-\[\#cf7051\].to-\[\#cca972\] {
   background-color: #b84c2f !important;
+  background-image: none !important;
   color: #ffffff !important;
 }
-.theme-light .hover\:bg-\[\#c06041\]:hover {
-  background-color: #9d3f25 !important;
+
+.bg-\[\#cf7051\]\/10,
+.bg-\[\#cf7051\]\/15 {
+  background-color: rgba(184, 76, 47, 0.08) !important;
+  color: #b84c2f !important;
 }
 
-/* Active tab text and indicators */
-.theme-light .text-\[\#e8dfd8\] {
-  color: #1a1613 !important;
-}
-.theme-light .text-\[\#9ca69b\] {
-  color: #726a5f !important;
-}
-.theme-light .text-\[\#cca972\] {
-  color: #9c7132 !important; /* higher contrast warm gold */
-}
-.theme-light .text-\[\#cf7051\] {
-  color: #b84c2f !important; /* higher contrast red/rose */
+.border-\[\#cf7051\]\/20,
+.border-\[\#cf7051\]\/30,
+.border-\[\#cf7051\]\/55,
+.border-\[\#cf7051\]\/15 {
+  border-color: rgba(184, 76, 47, 0.25) !important;
 }
 
-/* Floating layer effects */
-.theme-light .opacity-20,
-.theme-light .opacity-30 {
-  opacity: 0.08 !important;
+/* Secondary Accent: Warm Gold */
+.text-\[\#cca972\] {
+  color: #9c7132 !important;
 }
 
-/* In-app text color helper variables */
-.theme-light .text-white {
+.bg-\[\#cca972\]\/15,
+.bg-\[\#cca972\]\/10 {
+  background-color: rgba(156, 113, 50, 0.08) !important;
+  color: #9c7132 !important;
+}
+
+.border-\[\#cca972\]\/20,
+.border-\[\#cca972\]\/30,
+.border-\[\#cca972\]\/50 {
+  border-color: rgba(156, 113, 50, 0.25) !important;
+}
+
+/* Text elements */
+.text-\[\#e8dfd8\],
+.text-slate-100,
+.text-slate-200,
+.text-gray-100,
+.text-white {
   color: #1a1613 !important;
 }
-.theme-light .text-slate-100,
-.theme-light .text-slate-200,
-.theme-light .text-gray-100 {
-  color: #1a1613 !important;
-}
-.theme-light .text-slate-400,
-.theme-light .text-gray-400,
-.theme-light .text-zinc-400 {
+
+.text-\[\#9ca69b\],
+.text-\[\#5e5a5c\],
+.text-slate-400,
+.text-gray-400,
+.text-zinc-400 {
   color: #615a51 !important;
 }
 
-/* Retain white text specifically for labels/symbols on filled badges or buttons */
-.theme-light .bg-\[\#cf7051\] *,
-.theme-light .bg-\[\#cf7051\] .text-white,
-.theme-light .bg-emerald-600 *,
-.theme-light .bg-emerald-600 .text-white,
-.theme-light button.bg-\[\#cf7051\] *,
-.theme-light button.bg-\[\#cf7051\] {
+/* Filled tags and buttons keep their white text */
+.bg-\[\#cf7051\] *,
+.bg-\[\#cf7051\] .text-white,
+.bg-emerald-600 *,
+.bg-emerald-600 .text-white,
+button.bg-\[\#cf7051\] *,
+button.bg-\[\#cf7051\],
+.bg-gradient-to-r.from-\[\#cf7051\].to-\[\#cca972\] *,
+.bg-gradient-to-r.from-\[\#cf7051\].to-\[\#cca972\] {
   color: #ffffff !important;
 }
 
-/* Fix quote card gradient to make it super elegant in light mode */
-.theme-light .bg-gradient-to-r.from-neutral-950\/60 {
-  background-image: linear-gradient(to right, #f2eee6, #e7e3da) !important;
-  border-color: #dcd7ce !important;
+/* Success Green & Muted Warning Amber */
+.bg-emerald-600,
+.bg-emerald-500 {
+  background-color: #2f6f4c !important;
 }
 
-.theme-light .bg-gradient-to-r.from-\[\#141416\]\/95 {
-  background-image: linear-gradient(to right, #ffffff, #fcfbfa) !important;
+.text-emerald-400,
+.text-emerald-500 {
+  color: #2f6f4c !important;
+}
+
+.text-amber-400,
+.text-amber-500 {
+  color: #dca134 !important;
+}
+
+/* Selection and Accent Highlight */
+::selection {
+  background-color: rgba(184, 76, 47, 0.15) !important;
+  color: #1a1613 !important;
+}
+
+/* Smooth Quote Card & Interactive Overlay overrides */
+.bg-gradient-to-r.from-neutral-950\/60 {
+  background-image: linear-gradient(to right, #f4f0e6, #faf8f5) !important;
   border-color: #e3ded6 !important;
 }
 
+.bg-gradient-to-r.from-\[\#141416\]\/95 {
+  background-image: linear-gradient(to right, #ffffff, #faf8f5) !important;
+  border-color: #e3ded6 !important;
+}
+
+/* Disable unwanted telemetry styles */
+.text-\[\#9cd69c\] {
+  color: #615a51 !important;
+}
